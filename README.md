@@ -21,20 +21,6 @@ Disfruto especialmente desarrollando sistemas, entendiendo cómo funcionan por d
 
 ---
 
-## 🚀 Lo que hago
-
-```text
-🎮 Desarrollo de videojuegos
-🧠 Sistemas de gameplay e IA
-🎨 Modelado y animación 3D
-🌍 Entornos interactivos
-🌐 Desarrollo web
-🛠️ Herramientas y sistemas
-🎬 Edición de vídeo
-```
-
----
-
 ## 🧰 Tecnologías y herramientas
 
 ### 💻 Programación y desarrollo
@@ -61,19 +47,6 @@ Disfruto especialmente desarrollando sistemas, entendiendo cómo funcionan por d
   <img src="https://cdn.simpleicons.org/davinciresolve" width="48" height="48" />
   <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/capcut-icon.svg" width="48" height="48" />
 </p>
-
----
-
-## 🔬 Actualmente aprendiendo y explorando
-
-- 🎮 Sistemas avanzados de gameplay
-- 🤖 Inteligencia artificial aplicada a videojuegos
-- 💬 NPCs conversacionales mediante IA
-- 🌐 Desarrollo web
-- 🧩 Sistemas multijugador
-- 🌍 Mundos y experiencias interactivas
-- 🛠️ Herramientas para agilizar el desarrollo
-- 🎨 Technical Art
 
 ---
 

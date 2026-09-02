@@ -1,47 +1,49 @@
-# 👋 Hola, soy Cristian Habana
+# 👋 Cristian Habana
 
-### 🎮 Desarrollador de videojuegos · Artista 3D · Editor de vídeo · Desarrollador web
+### 🎮 Game Developer · Programmer · 3D Artist · Video Editor
 
-Me gusta crear proyectos donde se mezclan **programación, videojuegos, 3D y tecnología**.
+I build **interactive experiences, gameplay systems and 3D projects**.
 
-Disfruto especialmente desarrollando sistemas, entendiendo cómo funcionan por dentro y convirtiendo ideas en experiencias interactivas.
+My main focus is **gameplay programming and systems development**, while also working across 3D, animation, video and web technologies.
 
----
-
-## 🧠 Sobre mí
-
-- 🎓 Estudio **Animación 3D, Juegos y Entornos Interactivos**
-- 🎮 Desarrollo proyectos y sistemas con **Unity**
-- 🧩 Me interesa especialmente la **programación de gameplay**
-- 🎨 Trabajo con **modelado 3D, animación y entornos**
-- 🎬 También realizo **edición de vídeo**
-- 🌐 Desarrollo y experimento con tecnologías web
-- 🤖 Me interesa la aplicación de la **IA en videojuegos**
-- 🔧 Prefiero entender cómo funciona un sistema antes que limitarme a hacerlo funcionar
+I enjoy understanding how things work under the hood, building systems from scratch and turning ideas into working experiences.
 
 ---
 
-## 🧰 Tecnologías y herramientas
+## 🎮 What I do
 
-### 💻 Programación y desarrollo
+| Area                    | Focus                                            |
+| ----------------------- | ------------------------------------------------ |
+| 🎮 **Game Development** | Gameplay systems, mechanics, interactive systems |
+| 💻 **Programming**      | C#, Lua, web development, tools and automation   |
+| 🎨 **3D**               | Modelling, animation, environments               |
+| 🎬 **Video**            | Editing, motion and audiovisual content          |
+| 🤖 **AI**               | AI-driven systems and experimentation            |
+| 🔧 **Systems**          | Architecture, debugging and optimization         |
+
+---
+
+## 🧰 Tech Stack
+
+### 💻 Programming
 
 <p>
   <img src="https://skillicons.dev/icons?i=cs,html,css,github,vscode,visualstudio" />
 </p>
 
-### 🎮 Desarrollo de videojuegos
+### 🎮 Game Development
 
 <p>
   <img src="https://skillicons.dev/icons?i=unity" />
 </p>
 
-### 🎨 3D y diseño
+### 🎨 3D & Design
 
 <p>
   <img src="https://skillicons.dev/icons?i=blender,photoshop" />
 </p>
 
-### 🎬 Edición de vídeo
+### 🎬 Video
 
 <p>
   <img src="https://cdn.simpleicons.org/davinciresolve" width="48" height="48" />
@@ -50,40 +52,49 @@ Disfruto especialmente desarrollando sistemas, entendiendo cómo funcionan por d
 
 ---
 
-## 🧭 Mi forma de trabajar
+## 🚀 Currently
 
-> **Entender el sistema → construirlo → probarlo → mejorarlo.**
-
-Me interesa comprender cómo funcionan las tecnologías que utilizo para poder resolver problemas por mi cuenta y aplicar lo aprendido en proyectos diferentes.
+* 🎮 Developing and experimenting with **gameplay systems**
+* 🧠 Improving my **C# and game architecture** skills
+* 🧩 Building projects with **Unity**
+* 🤖 Exploring **AI applications in games**
+* 🎨 Combining programming with **3D and animation**
+* 🔧 Creating tools and systems to solve real problems
 
 ---
 
-## 📊 Estadísticas de GitHub
+## 🧭 How I Work
+
+> **Understand → Build → Test → Improve**
+
+I don't want to simply make something work.
+
+I want to understand **why it works**, how the system is structured and how it can be improved.
+
+That approach helps me transfer what I learn from one project to another instead of relying on isolated solutions.
+
+---
+
+## 📊 GitHub Activity
 
 <p align="center">
-  <img src="https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=elhabana&theme=github_dark" />
+  <img
+    src="https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=elhabana&theme=github_dark"
+    width="100%"
+  />
 </p>
 
 <p align="center">
-  <img src="https://github-profile-summary-cards.vercel.app/api/cards/repos-per-language?username=elhabana&theme=github_dark" height="170" />
-  <img src="https://github-profile-summary-cards.vercel.app/api/cards/most-commit-language?username=elhabana&theme=github_dark" height="170" />
+  <img
+    src="https://github-profile-summary-cards.vercel.app/api/cards/stats?username=elhabana&theme=github_dark"
+    width="420"
+  />
 </p>
 
-
-## 🌐 Encuéntrame
-
-<p align="center">
-<a href="https://github.com/elhabana"><img src="https://img.shields.io/badge/GitHub-@elhabana-181717?style=for-the-badge&logo=github&logoColor=white" /></a><a href="https://www.therookies.co/u/elhabana"><img src="https://img.shields.io/badge/The%20Rookies-Portfolio-0F172A?style=for-the-badge" /></a><a href="https://kick.com/elhabanaa"><img src="https://img.shields.io/badge/Kick-@elhabanaa-53FC18?style=for-the-badge&logo=kick&logoColor=000000" /></a>
-</p>
-
-<p align="center">
-<a href="https://www.youtube.com/@elhabana"><img src="https://img.shields.io/badge/YouTube-@elhabana-FF0000?style=for-the-badge&logo=youtube&logoColor=white" /></a><a href="https://www.instagram.com/elhabana"><img src="https://img.shields.io/badge/Instagram-@elhabana-E4405F?style=for-the-badge&logo=instagram&logoColor=white" /></a><a href="https://discord.gg/9k8ZbG4w9F"><img src="https://img.shields.io/badge/Discord-Comunidad-5865F2?style=for-the-badge&logo=discord&logoColor=white" /></a>
-</p>
-
-<hr>
+---
 
 <div align="center">
 
-### ⚡ Crear · Programar · Experimentar · Mejorar
+### 🎮 Build systems. Create worlds. Keep learning.
 
 </div>

@@ -1,42 +1,52 @@
 # 👋 Cristian Habana
 
-### 🎮 Game Developer · Programmer · 3D Artist
+### 🎮 Game Developer · Programmer · 3D Artist · Video Editor
 
 I build **games, gameplay systems and interactive experiences**.
 
-My main focus is **gameplay programming, systems development and game architecture**, while also working with 3D, animation, video and web technologies.
+Focused on **gameplay programming, systems development and game architecture**, with experience across 3D, animation, video and web technologies.
 
 ---
 
-## 🛠️ Skills
+## 🛠️ Tech Stack
 
-**Programming**  
-C# · Lua · HTML · CSS · Automation
+### 💻 Programming
 
-**Game Development**  
-Unity · Gameplay Systems · Game Architecture · Tools
+<p>
+  <img src="https://skillicons.dev/icons?i=cs,html,css,github,vscode,visualstudio" />
+</p>
 
-**3D & Design**  
-Blender · Photoshop · 3D Modeling · Animation
+### 🎮 Game Development
 
-**Video**  
-DaVinci Resolve · CapCut · Motion Editing
+<p>
+  <img src="https://skillicons.dev/icons?i=unity" />
+</p>
 
-**Other**  
-Git · GitHub · VS Code · AI
+### 🎨 3D & Design
+
+<p>
+  <img src="https://skillicons.dev/icons?i=blender,photoshop" />
+</p>
+
+### 🎬 Video
+
+<p>
+  <img src="https://cdn.simpleicons.org/davinciresolve" width="48" height="48" />
+  <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/capcut-icon.svg" width="48" height="48" />
+</p>
 
 ---
 
 ## 🚀 Currently
 
-- 🎮 Building gameplay systems and Unity projects
-- 💻 Improving C# and software architecture
-- 🤖 Exploring AI-driven game systems
-- 🎨 Combining programming with 3D and animation
+- 🎮 Developing gameplay systems with **Unity**
+- 💻 Improving **C# and game architecture**
+- 🤖 Exploring **AI-driven game systems**
+- 🎨 Combining **programming, 3D and animation**
 
 ---
 
-## 📊 GitHub
+## 📊 GitHub Activity
 
 <p align="center">
   <img src="https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=elhabana&theme=github_dark" width="100%" />
@@ -50,6 +60,6 @@ Git · GitHub · VS Code · AI
 
 <p align="center">
 
-### 🎮 Build systems. Create worlds.
+### 🎮 Build systems. Create worlds. Keep learning.
 
 </p>

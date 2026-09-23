@@ -44,17 +44,7 @@ Focused on **gameplay programming, systems development and game architecture**, 
 - 🤖 Exploring **AI-driven game systems**
 - 🎨 Combining **programming, 3D and animation**
 
----
 
-## 📊 GitHub Activity
-
-<p align="center">
-  <img src="https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=elhabana&theme=github_dark" width="100%" />
-</p>
-
-<p align="center">
-  <img src="https://github-profile-summary-cards.vercel.app/api/cards/stats?username=elhabana&theme=github_dark" width="420" />
-</p>
 
 ---
 

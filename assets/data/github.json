@@ -1,0 +1,15 @@
+{
+  "user": "elhabana",
+  "fetched_at": "2026-09-29T16:05:41+00:00",
+  "source": "https://api.github.com/users/elhabana/repos",
+  "scope": "Public owned repositories, excluding forks; includes archived repositories. Languages weighted by GitHub-reported bytes.",
+  "repositories": 8,
+  "stars": 0,
+  "forks": 0,
+  "languages": {
+    "C#": 2847038,
+    "ShaderLab": 509233,
+    "HLSL": 99865,
+    "JavaScript": 3045
+  }
+}

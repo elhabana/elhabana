@@ -1,0 +1,50 @@
+name: Generate profile assets
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 7 * * 1'
+  push:
+    paths:
+      - 'scripts/**'
+      - 'assets/data/game-skills.json'
+      - 'assets/data/creative-skills.json'
+      - '.github/workflows/update-profile.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: profile-assets
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify generators
+        run: python -m unittest discover -s scripts -p 'test_*.py'
+      - name: Generate banner and interest maps
+        run: |
+          python scripts/banner.py
+          python scripts/radar.py
+      - name: Fetch public GitHub data and render telemetry
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/cards.py
+      - name: Save generated assets for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: profile-assets
+          path: assets/
+          retention-days: 14
+          if-no-files-found: error
+      # Deliberately no git commit or push. Download the artifact and review it
+      # before publishing. This workflow needs read access only.

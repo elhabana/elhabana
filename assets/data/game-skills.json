@@ -1,0 +1,12 @@
+{
+  "title": "GAME DEVELOPMENT",
+  "description": "Editorial emphasis inferred from the profile brief, not proficiency scores. Adjust to personal preference.",
+  "axes": [
+    {"label": "Gameplay", "value": 90},
+    {"label": "Game Systems", "value": 90},
+    {"label": "Unity", "value": 90},
+    {"label": "C#", "value": 85},
+    {"label": "Multiplayer", "value": 70},
+    {"label": "Game AI", "value": 65}
+  ]
+}

@@ -14,7 +14,10 @@
 </picture>
 
 <a href="https://github.com/elhabana"><img src="https://img.shields.io/badge/GitHub-elhabana-151A22?style=for-the-badge&amp;logo=github&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="GitHub: elhabana" /></a>
-<!-- Add confirmed LinkedIn, portfolio, The Rookies or YouTube links here. -->
+<a href="https://www.youtube.com/@elhabana"><img src="https://img.shields.io/badge/YouTube-151A22?style=for-the-badge&amp;logo=youtube&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="YouTube" /></a>
+<a href="https://www.instagram.com/elhabana"><img src="https://img.shields.io/badge/Instagram-151A22?style=for-the-badge&amp;logo=instagram&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Instagram" /></a>
+<a href="https://www.twitch.tv/elhabanaaa"><img src="https://img.shields.io/badge/Twitch-151A22?style=for-the-badge&amp;logo=twitch&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Twitch" /></a>
+<a href="https://kick.com/elhabanaa"><img src="https://img.shields.io/badge/Kick-151A22?style=for-the-badge&amp;logo=kick&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Kick" /></a>
 
 <br /><br />
 <img src="https://komarev.com/ghpvc/?username=elhabana&amp;style=flat&amp;color=647A96&amp;label=profile+views" alt="Profile view counter for elhabana" />
@@ -41,69 +44,18 @@ I'm **Cristian Habana / elhabana**, a game developer working mainly with **Unity
 ## my stack
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://skillicons.dev/icons?i=unity,cs,visualstudio,blender,ps&amp;theme=light&amp;perline=5" />
-  <img src="https://skillicons.dev/icons?i=unity,cs,visualstudio,blender,ps&amp;theme=dark&amp;perline=5" width="280" alt="Unity, C#, Visual Studio, Blender and Photoshop" />
+  <source media="(prefers-color-scheme: light)" srcset="https://skillicons.dev/icons?i=unity,cs,vscode,blender,ps&amp;theme=light&amp;perline=5" />
+  <img src="https://skillicons.dev/icons?i=unity,cs,vscode,blender,ps&amp;theme=dark&amp;perline=5" width="280" alt="Unity, C#, VS Code, Blender and Photoshop" />
 </picture>
 
 <br /><br />
-<img src="https://img.shields.io/badge/DaVinci_Resolve-151A22?style=flat-square&amp;labelColor=10141B" alt="DaVinci Resolve" />
-&nbsp;
-<img src="https://img.shields.io/badge/CapCut-151A22?style=flat-square&amp;labelColor=10141B" alt="CapCut" />
+<img src="assets/icons/davinciresolve.svg" width="48" height="48" alt="DaVinci Resolve" title="DaVinci Resolve" />
+&nbsp;&nbsp;
+<img src="assets/icons/capcut.svg" width="48" height="48" alt="CapCut" title="CapCut" />
+
+<br /><br />
 
 <sub>Game development · 3D &amp; visual · Audiovisual</sub>
-
-</div>
-
----
-
-<div align="center">
-
-## signals
-
-<table>
-<tr>
-<td width="50%" align="center" valign="top">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/radar-game-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="assets/radar-game-light.svg" />
-  <img src="assets/radar-game-dark.svg" width="100%" alt="Game development focus: Gameplay, Game Systems, Unity, C#, Multiplayer and Game AI. Personal emphasis, not proficiency scores." />
-</picture>
-</td>
-<td width="50%" align="center" valign="top">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/radar-creative-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="assets/radar-creative-light.svg" />
-  <img src="assets/radar-creative-dark.svg" width="100%" alt="Creative interests: 3D, Animation, Video Editing, Visual Design, Game Art Integration and Content Creation. Personal emphasis, not proficiency scores." />
-</picture>
-</td>
-</tr>
-</table>
-
-<sub>Personal areas of interest and focus. Illustrative emphasis, not measured proficiency.</sub>
-
-</div>
-
----
-
-<div align="center">
-
-## github telemetry
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/github-stats-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="assets/github-stats-light.svg" />
-  <img src="assets/github-stats-dark.svg" width="600" alt="Dated GitHub statistics: public owned repositories, stars received and forks received; excludes forked repositories." />
-</picture>
-
-<br /><br />
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/languages.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="assets/languages-light.svg" />
-  <img src="assets/languages.svg" width="600" alt="GitHub language distribution by bytes in public owned repositories, excluding forks and including archived repositories. This is repository history, not my current stack." />
-</picture>
-
-<sub>Public repository snapshot, including archived work. Language bytes describe code history, not my current stack.</sub>
 
 </div>
 

@@ -1,5 +1,4 @@
 """Generate an original editor-inspired header and compact project cover."""
-import math
 from visuals import THEMES, text, rect, line, svg, save
 from motion import scene, animate
 
@@ -10,17 +9,12 @@ def render(theme):
         b.append(f'<circle cx="{38+i*21}" cy="38" r="5" fill="{c["muted"]}" opacity="{.4+i*.25}"/>')
     b += [text(590,44,'elhabana // interactive systems',c['text'],16,'middle'),line(14,64,1166,64,c['line'])]
     b += [rect(34,88,418,468,c['bg'],c['line'],5),rect(474,88,672,468,c['bg'],c['line'],5)]
-    b += [text(50,114,'SYSTEM.VIEW',c['accent'],15,weight=700),text(434,114,'MOTION STUDY',c['muted'],12,'end'),line(34,130,452,130,c['line'])]
+    b += [text(50,114,'SYSTEM.VIEW',c['accent'],15,weight=700),text(434,114,'MEME BUFFER',c['muted'],12,'end'),line(34,130,452,130,c['line'])]
     b += [text(492,114,'DEVELOPER.PROFILE',c['accent'],15,weight=700),text(1127,114,'@elhabana',c['text'],15,'end'),line(474,130,1146,130,c['line'])]
-    # Perspective construction grid and an isometric wireframe system core.
-    for i in range(9):
-        b.append(line(55+i*47,487,244,298,c['line'],'opacity=".6"'))
-    for y in [365,384,410,444,487]:
-        b.append(line(54,y,432,y,c['line'],'opacity=".6"'))
     b += scene(c)
     b.append(f'<rect x="484" y="200" width="652" height="27" rx="3" fill="{c["accent"]}" opacity=".07">'
              +animate('y',[200,200,256,256,256,424,424,200,200])+'</rect>')
-    rows = [('Name','Cristian Habana'),('Role','Game Developer / Digital Creator'),('Engine','Unity'),('Language','C#'),('Focus','Gameplay / Game Systems'),('Architecture','Reusable / Modular'),('Multiplayer','Local / Online'),('AI','Game AI / Player Systems'),('3D','Blender / Animation'),('Visual','Photoshop'),('Video','DaVinci Resolve / CapCut'),('Building','UN-CREDIBLES')]
+    rows = [('Name','Cristian Habana'),('Role','Game Developer / Digital Creator'),('Engine','Unity'),('Language','C#'),('Focus','Gameplay / Game Systems'),('Editor','VS Code'),('Multiplayer','Local / Online'),('AI','Game AI / Player Systems'),('3D','Blender / Animation'),('Visual','Photoshop'),('Video','DaVinci Resolve / CapCut'),('Building','UN-CREDIBLES')]
     for i,(label,value) in enumerate(rows):
         y=163+i*28
         b += [text(494,y,label,c['muted'],15),text(1126,y,value,c['text'],15,'end')]

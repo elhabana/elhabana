@@ -10,6 +10,12 @@ python -m unittest discover -s scripts -p 'test_*.py'
 ```
 
 `visuals.py` owns the palette. `banner.py` generates the banner and project cover.
+`motion.py` builds 720 deterministic particles that morph over an 18-second SVG
+SMIL loop: rotating 3D geometry, gameplay nodes, then an audiovisual waveform and
+timeline. Phase labels, the profile highlight and progress line are synchronized.
+It needs no JavaScript or external service. The first frame remains meaningful
+in static renderers. The animation is procedural illustration, not live telemetry
+or mouse interaction. PNG exports do not preserve this motion.
 `radar.py` reads `assets/data/game-skills.json` and `creative-skills.json`.
 Their 0–100 values are illustrative editorial emphasis, not proficiency ratings.
 Game emphasis follows the brief; creative axes start equal. Edit them freely.

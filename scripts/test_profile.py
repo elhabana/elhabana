@@ -9,9 +9,22 @@ import xml.etree.ElementTree as ET
 import cards
 import radar
 import banner
+import motion
 from visuals import ASSETS, THEMES
 
 class ProfileTests(unittest.TestCase):
+    def test_motion_loop_and_viewport_bounds(self):
+        frames=motion.particle_frames()
+        self.assertEqual(len(frames),len(motion.TIMES))
+        self.assertEqual(frames[0],frames[-1])
+        for frame in frames:
+            self.assertEqual(len(frame),720)
+            self.assertTrue(all(49<x<438 and 144<y<511 for x,y in frame))
+        for theme in THEMES:
+            root=ET.fromstring(banner.render(theme))
+            for node in root.findall('.//{http://www.w3.org/2000/svg}animate'):
+                self.assertEqual(len(node.get('values').split(';')),len(node.get('keyTimes').split(';')))
+
     def test_pagination_and_scope(self):
         def repo(i):
             return dict(full_name=f'elhabana/r{i}',fork=False,private=False,stargazers_count=2,forks_count=1)

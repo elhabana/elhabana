@@ -26,8 +26,8 @@ The stack uses VS Code. Resolve and CapCut have local app icons:
 - CapCut: https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/capcut-icon.svg
   (UXWing; retained original artwork). Brand marks belong to their owners.
 
-External README services: readme-typing-svg, Shields badges, skillicons and
-Komarev's image-request counter. Core personal details are also readable text.
+External README services: readme-typing-svg, Shields badges and skillicons.
+Core personal details are also readable text.
 Social destinations were read directly from https://github.com/elhabana:
 YouTube @elhabana, Instagram elhabana, Twitch elhabanaaa, Kick elhabanaa.
 

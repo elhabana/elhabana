@@ -19,9 +19,6 @@
 <a href="https://www.twitch.tv/elhabanaaa"><img src="https://img.shields.io/badge/Twitch-151A22?style=for-the-badge&amp;logo=twitch&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Twitch" /></a>
 <a href="https://kick.com/elhabanaa"><img src="https://img.shields.io/badge/Kick-151A22?style=for-the-badge&amp;logo=kick&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Kick" /></a>
 
-<br /><br />
-<img src="https://komarev.com/ghpvc/?username=elhabana&amp;style=flat&amp;color=647A96&amp;label=profile+views" alt="Profile view counter for elhabana" />
-
 </div>
 
 ---

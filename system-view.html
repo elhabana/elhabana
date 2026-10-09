@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SYSTEM.VIEW // X_X</title>
+  <style>
+    :root { color-scheme: dark light; font-family: Consolas, "Liberation Mono", monospace; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #090b0f; color: #e8edf4; }
+    .window { width: min(100%, 482px); padding: 14px; border: 1px solid #2b333f; border-radius: 14px; background: #10141b; }
+    .window-bar { display: flex; align-items: center; gap: 11px; height: 36px; padding: 0 8px 12px; border-bottom: 1px solid #2b333f; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: #9ba8ba; opacity: .5; }
+    .dot:nth-child(2) { opacity: .7; }.dot:nth-child(3) { opacity: .9; }
+    .window-title { margin-left: auto; font-size: 12px; }
+    .panel { margin-top: 15px; border: 1px solid #2b333f; border-radius: 5px; padding: 14px; background: #090b0f; }
+    .panel-head, .panel-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .panel-head { padding: 0 2px 12px; border-bottom: 1px solid #2b333f; font-size: 13px; }
+    .panel-head strong, .tag { color: #a9c0dd; }.muted { color: #9ba8ba; }
+    .viewport { position: relative; overflow: hidden; aspect-ratio: 389 / 367; margin-top: 14px; border: 1px solid #2b333f; border-radius: 4px; background: #10141b; }
+    .viewport::before, .viewport::after { content: ""; position: absolute; left: 50%; top: 50%; translate: -50% -50%; border: 1px solid #2b333f; border-radius: 50%; pointer-events: none; }
+    .viewport::before { width: 76%; aspect-ratio: 1; }.viewport::after { width: 57%; aspect-ratio: 1; border-style: dashed; }
+    .crosshair { position: absolute; inset: 0; background: linear-gradient(90deg, transparent calc(50% - .5px), #2b333f calc(50% - .5px), #2b333f calc(50% + .5px), transparent calc(50% + .5px)), linear-gradient(transparent calc(50% - .5px), #2b333f calc(50% - .5px), #2b333f calc(50% + .5px), transparent calc(50% + .5px)); opacity: .5; }
+    .pose { position: absolute; left: 5%; top: 0; width: 90%; height: 97%; object-fit: contain; opacity: 0; }
+    .pose.active { opacity: 1; }
+    .panel-foot { padding: 10px 3px 0; font-size: 12px; }
+    .tag { border: 1px solid #2b333f; border-radius: 3px; padding: 5px 9px; }
+    .controls { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+    button { appearance: none; border: 1px solid #7694b5; border-radius: 5px; background: #a9c0dd; color: #10141b; font: inherit; font-size: 13px; font-weight: 700; padding: 10px 14px; cursor: pointer; }
+    button:hover { background: #c7d8ed; } button:focus-visible { outline: 2px solid #e8edf4; outline-offset: 3px; }
+    .hint { color: #9ba8ba; font-size: 12px; line-height: 1.4; }
+    @media (prefers-color-scheme: light) {
+      body { background: #f4f6f9; color: #202a38; }.window { background: #fff; border-color: #cfd6e0; }
+      .window-bar, .panel-head, .panel, .viewport, .tag { border-color: #cfd6e0; }
+      .panel { background: #f4f6f9; }.viewport { background: #fff; }
+      .viewport::before, .viewport::after { border-color: #cfd6e0; }
+      .crosshair { background: linear-gradient(90deg, transparent calc(50% - .5px), #cfd6e0 calc(50% - .5px), #cfd6e0 calc(50% + .5px), transparent calc(50% + .5px)), linear-gradient(transparent calc(50% - .5px), #cfd6e0 calc(50% - .5px), #cfd6e0 calc(50% + .5px), transparent calc(50% + .5px)); }
+      .panel-head strong, .tag { color: #42658d; }.muted, .hint { color: #526277; }
+      button { background: #42658d; color: #fff; border-color: #42658d; } button:hover { background: #2f5278; }
+    }
+  </style>
+</head>
+<body>
+  <main class="window">
+    <div class="window-bar" aria-hidden="true"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="window-title">elhabana // interactive systems</span></div>
+    <section class="panel" aria-label="Avatar SYSTEM.VIEW">
+      <div class="panel-head"><strong>SYSTEM.VIEW</strong><span class="muted">AVATAR // X_X</span></div>
+      <div class="viewport" role="img" aria-label="Gato urbano con sudadera y gorra negra, animado con gestos de ojos y boca">
+        <div class="crosshair" aria-hidden="true"></div>
+        <img class="pose active" data-pose="neutral" src="assets/avatar/neutral.png" alt="" aria-hidden="true">
+        <img class="pose" data-pose="blink" src="assets/avatar/blink.png" alt="" aria-hidden="true">
+        <img class="pose" data-pose="talk" src="assets/avatar/talk.png" alt="" aria-hidden="true">
+        <img class="pose" data-pose="blink-talk" src="assets/avatar/blink-talk.png" alt="" aria-hidden="true">
+      </div>
+      <div class="panel-foot"><span class="tag">X_X // AVATAR</span><span class="muted">ONLINE</span></div>
+    </section>
+    <div class="controls">
+      <button id="sound" type="button" aria-pressed="false">🔊 Activar sonido</button>
+      <span class="hint" id="status" role="status">Sonará cuando abra la boca.</span>
+    </div>
+  </main>
+  <script>
+    const duration = 18000;
+    const times = [0, .20, .21, .34, .44, .45, .52, .54, .62, .73, .74, .88, .89, 1];
+    const states = ['neutral', 'blink', 'neutral', 'talk', 'neutral', 'blink-talk', 'talk', 'neutral', 'neutral', 'talk', 'neutral', 'blink', 'neutral', 'neutral'];
+    const poses = Object.fromEntries([...document.querySelectorAll('[data-pose]')].map(node => [node.dataset.pose, node]));
+    const button = document.querySelector('#sound');
+    const status = document.querySelector('#status');
+    let context, enabled = false, current = 'neutral', lastChirp = -Infinity;
+    const started = performance.now();
+
+    function chirp() {
+      if (!context || context.state !== 'running') return;
+      const now = context.currentTime;
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(580, now);
+      oscillator.frequency.exponentialRampToValueAtTime(780, now + .045);
+      oscillator.frequency.exponentialRampToValueAtTime(460, now + .11);
+      gain.gain.setValueAtTime(.0001, now);
+      gain.gain.exponentialRampToValueAtTime(.045, now + .015);
+      gain.gain.exponentialRampToValueAtTime(.0001, now + .12);
+      oscillator.connect(gain).connect(context.destination);
+      oscillator.start(now);
+      oscillator.stop(now + .13);
+    }
+
+    function tick(now) {
+      const phase = ((now - started) % duration) / duration;
+      let index = times.length - 2;
+      for (let i = 0; i < times.length - 1; i++) {
+        if (phase >= times[i] && phase < times[i + 1]) { index = i; break; }
+      }
+      const state = states[index];
+      if (state !== current) {
+        poses[current].classList.remove('active');
+        poses[state].classList.add('active');
+        current = state;
+      }
+      if (enabled && state.includes('talk') && now - lastChirp > 210) {
+        chirp();
+        lastChirp = now;
+      }
+      requestAnimationFrame(tick);
+    }
+
+    button.addEventListener('click', async () => {
+      if (!enabled) {
+        try {
+          context ??= new (window.AudioContext || window.webkitAudioContext)();
+          await context.resume();
+          enabled = true;
+          lastChirp = -Infinity;
+          button.textContent = '🔇 Silenciar';
+          button.setAttribute('aria-pressed', 'true');
+          status.textContent = 'Sonido activado';
+        } catch {
+          status.textContent = 'El navegador no ha podido activar el audio.';
+        }
+      } else {
+        enabled = false;
+        button.textContent = '🔊 Activar sonido';
+        button.setAttribute('aria-pressed', 'false');
+        status.textContent = 'Sonido silenciado';
+      }
+    });
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

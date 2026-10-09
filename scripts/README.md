@@ -8,12 +8,18 @@ python -m unittest discover -s scripts -p 'test_*.py'
 ```
 
 `visuals.py` owns the palette. `banner.py` generates the dark/light header and
-UN-CREDIBLES cover. `motion.py` samples original line-art contours from
-`assets/memes/contours.json` into 1,200 particles and animates an 18-second SVG
-SMIL loop: Surprised Pikachu, Trollface and This is fine. The contour drawings
-are original interpretations, not extracted images. Edit those paths and captions
-to change the memes. The loop needs no JavaScript or external service. Static
-renderers show its first frame; PNG exports do not preserve the animation.
+UN-CREDIBLES cover. `avatar.py` embeds four supplied poses in SYSTEM.VIEW and
+swaps the expressions in an 18-second SVG SMIL loop. The PNGs in `assets/avatar`
+are 420px copies of the supplied images. Both banner SVGs are self-contained,
+so the avatar also appears when the README is rendered through an image proxy.
+Static renderers show the neutral pose; PNG exports do not preserve animation.
+
+`system-view.html` is the interactive version. Open it in a browser and press
+**Activar sonido** to hear short synthesized chirps when the avatar opens its
+mouth. The sound needs a click because browsers block unsolicited audio. The
+GitHub profile README remains silent: GitHub renders its banner as an image and
+does not run the JavaScript needed for audio. To share sound publicly, host
+`system-view.html` together with `assets/avatar/` on a static web host.
 
 Signals, telemetry, their data and generators, and the Actions workflow were
 removed at the user's request. Banner regeneration is now local only. No API,

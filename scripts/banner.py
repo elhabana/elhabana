@@ -1,6 +1,13 @@
 """Generate an original editor-inspired header and compact project cover."""
 from visuals import THEMES, text, rect, line, svg, save
-from motion import scene, animate
+from avatar import scene
+
+
+def animate(attribute, values, times=(0, .16, .24, .34, .50, .60, .76, .86, 1)):
+    return (f'<animate attributeName="{attribute}" dur="18s" '
+            f'values="{";".join(str(v) for v in values)}" '
+            f'keyTimes="{";".join(str(t) for t in times)}" '
+            'calcMode="linear" repeatCount="indefinite"/>')
 
 def render(theme):
     c = THEMES[theme]
@@ -9,7 +16,7 @@ def render(theme):
         b.append(f'<circle cx="{38+i*21}" cy="38" r="5" fill="{c["muted"]}" opacity="{.4+i*.25}"/>')
     b += [text(590,44,'elhabana // interactive systems',c['text'],16,'middle'),line(14,64,1166,64,c['line'])]
     b += [rect(34,88,418,468,c['bg'],c['line'],5),rect(474,88,672,468,c['bg'],c['line'],5)]
-    b += [text(50,114,'SYSTEM.VIEW',c['accent'],15,weight=700),text(434,114,'MEME BUFFER',c['muted'],12,'end'),line(34,130,452,130,c['line'])]
+    b += [text(50,114,'SYSTEM.VIEW',c['accent'],15,weight=700),text(434,114,'AVATAR // X_X',c['muted'],12,'end'),line(34,130,452,130,c['line'])]
     b += [text(492,114,'DEVELOPER.PROFILE',c['accent'],15,weight=700),text(1127,114,'@elhabana',c['text'],15,'end'),line(474,130,1146,130,c['line'])]
     b += scene(c)
     b.append(f'<rect x="484" y="200" width="652" height="27" rx="3" fill="{c["accent"]}" opacity=".07">'

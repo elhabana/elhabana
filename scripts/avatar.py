@@ -17,7 +17,9 @@ def scene(c):
         '<defs><clipPath id="avatar-clip"><rect x="49" y="144" width="389" height="367" rx="4"/></clipPath></defs>',
         rect(49, 144, 389, 367, c['panel'], c['line'], 4),
         f'<circle cx="244" cy="329" r="148" fill="none" stroke="{c["line"]}"/>',
-        f'<circle cx="244" cy="329" r="111" fill="none" stroke="{c["line"]}" stroke-dasharray="3 8"/>',
+        f'<circle cx="244" cy="329" r="111" fill="none" stroke="{c["accent"]}" stroke-dasharray="3 8" opacity=".55">'
+        '<animateTransform attributeName="transform" type="rotate" from="0 244 329" to="360 244 329" '
+        'dur="30s" repeatCount="indefinite"/></circle>',
         line(244, 150, 244, 500, c['line'], 'opacity=".45"'),
         line(55, 329, 432, 329, c['line'], 'opacity=".45"'),
         '<g clip-path="url(#avatar-clip)">',
@@ -34,9 +36,13 @@ def scene(c):
             '</image>'
         )
     parts += [
+        f'<rect x="49" y="144" width="389" height="2" fill="{c["accent"]}" opacity=".45">'
+        '<animate attributeName="y" values="144;509;144" dur="6s" calcMode="linear" repeatCount="indefinite"/></rect>',
         '</g>',
         rect(53, 518, 135, 25, c['panel'], c['line'], 3),
         text(63, 535, 'X_X // AVATAR', c['accent'], 12, weight=700),
+        f'<circle cx="378" cy="531" r="4" fill="{c["accent"]}">'
+        '<animate attributeName="opacity" values="1;.2;1" dur="1.6s" calcMode="linear" repeatCount="indefinite"/></circle>',
         text(432, 535, 'ONLINE', c['muted'], 12, 'end'),
     ]
     return parts

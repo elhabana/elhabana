@@ -29,10 +29,9 @@ class ProfileTests(unittest.TestCase):
     def test_boot_overlay_is_static_safe(self):
         for theme in THEMES:
             root=ET.fromstring(banner.render(theme))
-            clip=root.find('.//{http://www.w3.org/2000/svg}clipPath[@id="boot-wipe"]')
-            self.assertIsNotNone(clip)
-            overlay=list(root).index(clip)+1
-            self.assertEqual(list(root)[overlay].get('opacity'),'0')
+            overlay=root.find('.//{http://www.w3.org/2000/svg}g[@id="boot"]')
+            self.assertIsNotNone(overlay)
+            self.assertEqual(overlay.get('opacity'),'0')
 
     def test_readme_local_assets(self):
         readme=(ASSETS.parent/'README.md').read_text(encoding='utf-8')

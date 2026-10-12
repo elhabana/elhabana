@@ -8,7 +8,7 @@
 
 <br /><br />
 
-<a href="https://elhabana.github.io"><img src="https://img.shields.io/badge/Portfolio-151A22?style=for-the-badge&amp;logo=githubpages&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Portfolio" /></a>
+<a href="https://elhabana.github.io"><img src="https://img.shields.io/badge/Portfolio-151A22?style=for-the-badge&amp;logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRENFNUYwIiBzdHJva2Utd2lkdGg9IjIiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8%2BPHBhdGggZD0iTTIgMTJoMjBNMTIgMmMzIDMuMiAzIDE2LjggMCAyME0xMiAyYy0zIDMuMi0zIDE2LjggMCAyMCIvPjwvc3ZnPg%3D%3D&amp;labelColor=10141B" alt="Portfolio" /></a>
 <a href="https://www.youtube.com/@elhabana"><img src="https://img.shields.io/badge/YouTube-151A22?style=for-the-badge&amp;logo=youtube&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="YouTube" /></a>
 <a href="https://www.instagram.com/elhabana"><img src="https://img.shields.io/badge/Instagram-151A22?style=for-the-badge&amp;logo=instagram&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Instagram" /></a>
 <a href="https://www.twitch.tv/elhabanaaa"><img src="https://img.shields.io/badge/Twitch-151A22?style=for-the-badge&amp;logo=twitch&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Twitch" /></a>

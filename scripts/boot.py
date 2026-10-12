@@ -1,9 +1,10 @@
-"""One-shot terminal boot sequence that wipes away to reveal SYSTEM.VIEW."""
+"""One-shot terminal boot sequence that glitches out and hands over to SYSTEM.VIEW."""
 from visuals import line, rect, text
 
 MODULES = ('unity', 'csharp', 'netcode', 'blender', 'photoshop', 'davinci-resolve')
-WIPE = 6.6    # seconds: the boot screen starts collapsing
-END = 7.4     # seconds: the banner underneath is fully revealed
+GLITCH = 6.0  # seconds: the boot screen starts glitching
+OFF = 6.5     # seconds: it collapses to a line, like a CRT switching off
+END = 6.8     # seconds: the boot screen is gone and the banner powers on
 SHAPE = 'M14 65 H1166 V586 Q1166 596 1156 596 H24 Q14 596 14 586 Z'
 
 
@@ -16,14 +17,23 @@ def typed(i, x, y, width, begin, body):
             f'<animate attributeName="width" from="0" to="{width}" begin="{begin}s" dur=".35s" fill="freeze"/>'
             f'</rect></clipPath><g clip-path="url(#boot-l{i})">{body}</g>')
 
+def frac(t):
+    return f'{t/END:.3f}'
+
 def boot(c):
     """The overlay is hidden by default, so static renderers show the banner."""
-    p = [f'<clipPath id="boot-wipe"><rect x="0" y="65" width="1180" height="531">'
-         f'<animate attributeName="y" values="65;596" begin="{WIPE}s" dur="{END-WIPE:.1f}s" fill="freeze"/>'
-         '</rect></clipPath>',
-         '<g opacity="0">',
-         f'<animate attributeName="opacity" values="1;1;0" keyTimes="0;.99;1" dur="{END}s" fill="freeze"/>',
-         f'<g clip-path="url(#boot-wipe)"><path d="{SHAPE}" fill="{c["panel"]}"/>',
+    p = ['<g id="boot" opacity="0">',
+         f'<animate attributeName="opacity" values="1;.25;1;.6;1;0" '
+         f'keyTimes="0;{frac(GLITCH)};{frac(GLITCH+.08)};{frac(GLITCH+.2)};{frac(GLITCH+.28)};1" '
+         f'dur="{END}s" calcMode="discrete" fill="freeze"/>',
+         '<g transform="translate(0 330)"><g>',
+         f'<animateTransform attributeName="transform" type="scale" values="1 1;1 1;1 .004" '
+         f'keyTimes="0;{frac(OFF)};1" dur="{END}s" fill="freeze"/>',
+         '<g transform="translate(0 -330)"><g>',
+         f'<animateTransform attributeName="transform" type="translate" values="0 0;-16 0;11 0;-5 0;0 0;0 0" '
+         f'keyTimes="0;{frac(GLITCH)};{frac(GLITCH+.1)};{frac(GLITCH+.22)};{frac(GLITCH+.32)};1" '
+         f'dur="{END}s" calcMode="discrete" fill="freeze"/>',
+         f'<path d="{SHAPE}" fill="{c["panel"]}"/>',
          text(1146, 96, 'BOOT // elhabana.sys', c['muted'], 12, 'end')]
     rows = [(.3, 110, [text(60, 110, '> booting elhabana.sys ...', c['text'], 16)], 260)]
     for i, name in enumerate(MODULES):
@@ -46,9 +56,9 @@ def boot(c):
           f'<rect x="60" y="556" width="0" height="6" rx="3" fill="{c["accent"]}">'
           '<animate attributeName="width" from="0" to="1060" begin=".3s" dur="4.6s" fill="freeze"/></rect>',
           text(1120, 584, 'LOADING PROFILE', c['muted'], 12, 'end'),
+          '</g></g></g></g>',
           '</g>',
-          f'<rect x="14" y="64" width="1152" height="2" fill="{c["accent"]}" opacity="0">'
-          f'<set attributeName="opacity" to="1" begin="{WIPE}s"/>'
-          f'<animate attributeName="y" values="64;595" begin="{WIPE}s" dur="{END-WIPE:.1f}s" fill="freeze"/></rect>',
-          '</g>']
+          f'<rect x="14" y="329" width="1152" height="2" fill="{c["accent"]}" opacity="0">'
+          f'<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;{OFF/(END+.4):.3f};{END/(END+.4):.3f};{(END+.15)/(END+.4):.3f};1" '
+          f'dur="{END+.4:.1f}s" fill="freeze"/></rect>']
     return p

@@ -13,10 +13,16 @@ with a small standard-library PNG decoder and turns them into a particle bust
 (about 5,000 dots, accent colour, brightness as halftone; inverted on the light
 theme). Every pose shares the same particle positions, so only the eye and mouth
 particles animate, following the same 18-second blink/talk SMIL loop. After the
-boot screen the particles fly in as swarms and a few keep shimmering. `boot.py`
-adds a one-shot terminal boot sequence on top of the header; it glitches, switches
-off like a CRT and the panels power on from a centre line. Both overlays are
-hidden or settled by default, so static renderers show the finished banner.
+boot screen the particles fly in as swarms and a few keep shimmering.
+
+The header opens with `invaders.py`: an 8-bit Space Invaders round simulated in
+Python (player, shots, hits, bombs, score) and baked into SMIL. The player is hit,
+GAME OVER flashes and the screen switches off like an old CRT. Then `boot.py`
+plays a short terminal boot sequence, glitches out and the panels power on from
+a centre line (about 10.5 s in total). DEVELOPER.PROFILE is a live terminal that
+types `whoami`, `ls skills/`, `cat focus.txt` and `cat now_building.txt` in a
+16-second loop. Every overlay is hidden or settled by default, so static
+renderers show the finished banner with the whole terminal session.
 Static renderers show the neutral pose; PNG exports do not preserve animation.
 
 `system-view.html` is the interactive version. Open it in a browser and press

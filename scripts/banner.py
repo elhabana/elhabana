@@ -1,20 +1,43 @@
 """Generate an original editor-inspired header and compact project cover."""
+from html import escape
+
 from visuals import THEMES, text, rect, line, svg, save
 from avatar import scene
 from boot import boot, END
+from invaders import invaders
 
 
-def animate(attribute, values, times=(0, .16, .24, .34, .50, .60, .76, .86, 1)):
-    return (f'<animate attributeName="{attribute}" dur="18s" '
-            f'values="{";".join(str(v) for v in values)}" '
-            f'keyTimes="{";".join(str(t) for t in times)}" '
-            'calcMode="linear" repeatCount="indefinite"/>')
+CYCLE = 16  # seconds: the live terminal types its commands, holds, clears and starts again
+SESSION = (('whoami', (('Cristian Habana', 'text', 700), (' / Game Developer', 'muted', 400))),
+           ('ls skills/', (('unity  csharp  netcode  blender  animation  video', 'text', 400),)),
+           ('cat focus.txt', (('gameplay systems · multiplayer · game AI', 'text', 400),)),
+           ('cat now_building.txt', (('UN-CREDIBLES', 'accent', 700), (' [IN DEVELOPMENT]', 'accent', 400))))
 
-def reveal(i):
-    """Fade a row in right after the boot screen; static renderers keep it visible."""
-    begin=END+.12*i
-    return (f'<animate attributeName="opacity" values="0;0;1" keyTimes="0;{begin/(begin+.4):.3f};1" '
-            f'dur="{begin+.4:.2f}s" fill="freeze"/>')
+def loop(attribute, full, start, done):
+    """Hidden until start, grows to full by done, cleared at the end of each cycle.
+    Static renderers keep the base value, so the whole session is readable."""
+    k = lambda t: f'{t/CYCLE:.4f}'
+    return (f'<animate attributeName="{attribute}" values="0;0;{full};{full};0;0" '
+            f'keyTimes="0;{k(start)};{k(done)};{k(CYCLE-.6)};{k(CYCLE-.5)};1" '
+            f'dur="{CYCLE}s" begin="{END}s" repeatCount="indefinite"/>')
+
+def terminal(c):
+    out,t=[],.5
+    for i,(command,result) in enumerate(SESSION):
+        y=180+i*90
+        width=(len(command)+2)*10+12
+        typed=t+len(command)*.06
+        out.append(f'<clipPath id="term-c{i}"><rect x="492" y="{y-22}" width="{width}" height="30">{loop("width",width,t,typed)}</rect></clipPath>')
+        out.append(f'<text x="494" y="{y}" font-size="18" clip-path="url(#term-c{i})"><tspan fill="{c["accent"]}" font-weight="700">$ </tspan>'
+                   f'<tspan fill="{c["text"]}">{escape(command)}</tspan></text>')
+        shown=typed+.3
+        spans=''.join(f'<tspan fill="{c[colour]}" font-weight="{weight}">{escape(value)}</tspan>' for value,colour,weight in result)
+        out.append(f'<text x="494" y="{y+32}" font-size="18" xml:space="preserve">{loop("opacity",1,shown,shown+.01)}{spans}</text>')
+        t=shown+.9
+    chars=sum(len(value) for value,_,_ in SESSION[-1][1])
+    out.append(f'<g>{loop("opacity",1,t-.9,t-.89)}<rect x="{494+chars*10+6}" y="{180+3*90+32-16}" width="10" height="20" fill="{c["accent"]}">'
+               '<animate attributeName="opacity" values="1;0" dur="1s" calcMode="discrete" repeatCount="indefinite"/></rect></g>')
+    return out
 
 def render(theme):
     c = THEMES[theme]
@@ -31,25 +54,10 @@ def render(theme):
     b += [text(50,114,'SYSTEM.VIEW',c['accent'],15,weight=700),line(34,130,452,130,c['line'])]
     b += [text(492,114,'DEVELOPER.PROFILE',c['accent'],15,weight=700),text(1127,114,'@elhabana',c['text'],15,'end'),line(474,130,1146,130,c['line'])]
     b += scene(c)
-    rows = [('Name','Cristian Habana'),('Role','Game Developer'),('Stack','Unity · C# · Netcode'),('Focus','Gameplay & Multiplayer'),('Create','3D · Animation · Video'),('Building','UN-CREDIBLES')]
-    ys=[178+i*54 for i in range(len(rows))]
-    hold=[y-22 for y in ys]
-    b.append(f'<rect x="484" y="{hold[0]}" width="652" height="32" rx="3" fill="{c["accent"]}" opacity=".08">'
-             +animate('y',hold+[hold[0]],[round(i/len(rows),3) for i in range(len(rows))]+[1]).replace('linear','discrete')+'</rect>')
-    for i,((label,value),y) in enumerate(zip(rows,ys)):
-        b.append(f'<g>{reveal(i)}')
-        b += [text(494,y,label.upper(),c['muted'],13,weight=700),text(1126,y,value,c['text'],18,'end',700 if i in (0,5) else 400)]
-        start=494+len(label)*9+14
-        end=1126-len(value)*10-14
-        if end>start: b.append(line(start,y-5,end,y-5,c['line'],'stroke-dasharray="1 5"'))
-        b.append('</g>')
-    b.append(f'<rect x="1131" y="{ys[-1]-15}" width="9" height="18" fill="{c["accent"]}">'
-             '<animate attributeName="opacity" values="1;0" dur="1s" calcMode="discrete" repeatCount="indefinite"/></rect>')
-    b += [line(494,513,1126,513,c['line']),text(494,539,'CURRENT BUILD // IN DEVELOPMENT',c['accent'],13,weight=700)]
-    b.append(f'<rect x="494" y="512" width="140" height="3" fill="{c["accent"]}">'
-             '<animate attributeName="x" values="494;986;494" dur="4s" calcMode="linear" repeatCount="indefinite"/></rect>')
+    b += terminal(c)
     b += ['</g></g></g>',text(1146,581,'CODE / CREATE / ITERATE',c['muted'],12,'end')]
     b += boot(c)
+    b += invaders(c)
     return svg(1180,610,theme,'elhabana: Unity and C# game developer; gameplay, multiplayer, 3D and audiovisual',b)
 
 def project(theme):

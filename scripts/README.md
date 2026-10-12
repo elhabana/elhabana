@@ -8,12 +8,15 @@ python -m unittest discover -s scripts -p 'test_*.py'
 ```
 
 `visuals.py` owns the palette. `banner.py` generates the dark/light header and
-UN-CREDIBLES cover. `avatar.py` embeds four supplied poses in SYSTEM.VIEW and
-swaps the expressions in an 18-second SVG SMIL loop. `boot.py` adds a one-shot terminal boot
-sequence (about 7 s) on top of the header; it wipes away to reveal SYSTEM.VIEW.
-The overlay is hidden by default, so static renderers show the banner itself. The PNGs in `assets/avatar`
-are 420px copies of the supplied images. Both banner SVGs are self-contained,
-so the avatar also appears when the README is rendered through an image proxy.
+UN-CREDIBLES cover. `avatar.py` reads the four supplied poses in `assets/avatar`
+with a small standard-library PNG decoder and turns them into a particle bust
+(about 5,000 dots, accent colour, brightness as halftone; inverted on the light
+theme). Every pose shares the same particle positions, so only the eye and mouth
+particles animate, following the same 18-second blink/talk SMIL loop. After the
+boot screen the particles fly in as swarms and a few keep shimmering. `boot.py`
+adds a one-shot terminal boot sequence on top of the header; it glitches, switches
+off like a CRT and the panels power on from a centre line. Both overlays are
+hidden or settled by default, so static renderers show the finished banner.
 Static renderers show the neutral pose; PNG exports do not preserve animation.
 
 `system-view.html` is the interactive version. Open it in a browser and press

@@ -17,9 +17,12 @@ class ProfileTests(unittest.TestCase):
     def test_animation_markup_and_themes(self):
         for theme in THEMES:
             root=ET.fromstring(banner.render(theme))
-            images=root.findall('.//{http://www.w3.org/2000/svg}image')
-            self.assertEqual(len(images),len(avatar.FRAMES))
-            self.assertTrue(all(image.get('href','').startswith('data:image/png;base64,') for image in images))
+            self.assertFalse(root.findall('.//{http://www.w3.org/2000/svg}image'))
+            dots=avatar.particles(theme=='light')
+            self.assertGreater(len(dots),2000)
+            talking=[looks for _,_,looks in dots if looks['talk']!=looks['neutral']]
+            blinking=[looks for _,_,looks in dots if looks['blink']!=looks['neutral']]
+            self.assertTrue(talking and blinking)
             for node in root.findall('.//{http://www.w3.org/2000/svg}animate'):
                 if node.get('keyTimes'):
                     self.assertEqual(len(node.get('values').split(';')),len(node.get('keyTimes').split(';')))

@@ -8,7 +8,7 @@
 
 <br /><br />
 
-<a href="https://elhabana.github.io"><img src="https://img.shields.io/badge/Portfolio-elhabana.github.io-A9C0DD?style=for-the-badge&amp;logo=googlechrome&amp;logoColor=10141B&amp;labelColor=DCE5F0" alt="Portfolio: elhabana.github.io" /></a>
+<a href="https://elhabana.github.io"><img src="https://img.shields.io/badge/Portfolio-151A22?style=for-the-badge&amp;logo=githubpages&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Portfolio" /></a>
 <a href="https://www.youtube.com/@elhabana"><img src="https://img.shields.io/badge/YouTube-151A22?style=for-the-badge&amp;logo=youtube&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="YouTube" /></a>
 <a href="https://www.instagram.com/elhabana"><img src="https://img.shields.io/badge/Instagram-151A22?style=for-the-badge&amp;logo=instagram&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Instagram" /></a>
 <a href="https://www.twitch.tv/elhabanaaa"><img src="https://img.shields.io/badge/Twitch-151A22?style=for-the-badge&amp;logo=twitch&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Twitch" /></a>
@@ -31,25 +31,13 @@ I'm **Cristian Habana / elhabana**, a game developer working mainly with **Unity
 
 ---
 
-<div align="center">
-
 ## `> ls ./stack`
 
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://skillicons.dev/icons?i=unity,cs,vscode,blender,ps&amp;theme=light&amp;perline=5" />
-  <img src="https://skillicons.dev/icons?i=unity,cs,vscode,blender,ps&amp;theme=dark&amp;perline=5" width="280" alt="Unity, C#, VS Code, Blender and Photoshop" />
-</picture>
-
-<br /><br />
+<picture><source media="(prefers-color-scheme: light)" srcset="https://skillicons.dev/icons?i=unity,cs,vscode,blender,ps&amp;theme=light&amp;perline=5" /><img src="https://skillicons.dev/icons?i=unity,cs,vscode,blender,ps&amp;theme=dark&amp;perline=5" height="48" alt="Unity, C#, VS Code, Blender and Photoshop" /></picture>
 <img src="assets/icons/davinciresolve.svg" width="48" height="48" alt="DaVinci Resolve" title="DaVinci Resolve" />
-&nbsp;&nbsp;
 <img src="assets/icons/capcut.svg" width="48" height="48" alt="CapCut" title="CapCut" />
 
-<br /><br />
-
 <sub>Game development · 3D &amp; visual · Audiovisual</sub>
-
-</div>
 
 ---
 

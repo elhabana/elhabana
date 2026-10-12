@@ -1,7 +1,8 @@
 """UN-CREDIBLES cover: four identical particle heroes brawling in two duels.
 
 Every pose comes from the team's concept sketches: standing (side view), punch,
-hit reaction, backflip and superhero landing. Their particles were extracted
+hit reaction, backflip, superhero landing and a selfie (taken by the puncher, with
+the victim flying behind). Their particles were extracted
 once (line art as bright dots, the body filled in as a plain suit) and live in
 assets/uncredibles/particles.json; the drawings are not kept in the repo. The
 in-between frames are particle morphs from the standing pose to each drawing.
@@ -16,10 +17,10 @@ from visuals import ASSETS
 # head of each drawing as an ellipse (cx, cy, rx, ry) in its own pixels: heads pair
 # with heads during a morph, so the face keeps its shape
 HEADS = {'hero': (87, 89, 84, 90), 'punch': (151, 66, 84, 68), 'flip': (218, 90, 84, 88),
-         'hit': (378, 95, 84, 85), 'land': (133, 98, 85, 92)}
+         'hit': (378, 95, 84, 85), 'land': (133, 98, 85, 92), 'selfie': (201, 85, 82, 80)}
 # how each drawing is placed over the standing one: head over head, the supporting
 # foot over the feet (the hit reaction leans far back), or centre of mass (in the air)
-ALIGN = {'punch': 'head', 'land': 'head', 'hit': 'feet', 'flip': 'centre'}
+ALIGN = {'punch': 'head', 'land': 'head', 'hit': 'feet', 'flip': 'centre', 'selfie': 'head'}
 STEP = 6            # particle spacing in source pixels, as extracted
 BODY_ROWS = 36      # bodies are matched in this many rows, whatever their height
 HEIGHT = 220        # standing hero height in the cover
@@ -32,7 +33,7 @@ HEROES = ((265, 1), (385, -1), (795, 1), (915, -1))
 HITS = ((.5, 0, 1, False), (1.1, 3, 2, False), (1.9, 1, 0, False),
         (2.6, 2, 3, False), (3.4, 0, 1, True), (4.2, 3, 2, True))
 # morph steps from standing to each drawing (8 for the punch: smoother, not blurrier)
-STEPS = {'punch': 8, 'hit': 4, 'flip': 6, 'land': 4}
+STEPS = {'punch': 8, 'hit': 4, 'flip': 6, 'land': 4, 'selfie': 4}
 
 def frames_of(name):
     """In-between names from standing towards a drawing, e.g. punch1..punch7, punch."""
@@ -51,6 +52,12 @@ STAGGER = sweep(frames_of('hit'), 0, .06) + sweep(frames_of('hit')[-2::-1], .24,
 BACKFLIP = (sweep(frames_of('flip'), 0, .12) + sweep(frames_of('flip')[-2:-5:-1], .5, .56)
             + sweep(frames_of('land'), .56, .68) + sweep(frames_of('land')[-2::-1], 1.0, 1.09)
             + [(1.09, 'idle')])
+# after a big hit the puncher pulls the arm back, turns its back on the flying victim
+# and takes a selfie with it in the background; turns round again once it has landed
+SELFIE = ([(o, n) for o, n in PUNCH if o < 0] + [(-.09 + 1e-3, 'punch'), (.06, 'punch5'), (.08, 'punch3'), (.1, 'punch1'),
+          (.12, 'turned')] + sweep(frames_of('selfie'), .14, .22) + sweep(frames_of('selfie')[-2::-1], .62, .68)
+          + [(.68, 'turned'), (.74, 'idle')])
+FLASH = .36         # seconds after a big hit: the victim is at the top of its flip, click
 LANDING = .66       # seconds after a big hit: feet (and fist) hit the ground (land frame at .65)
 
 
@@ -121,6 +128,11 @@ def poses():
         pairs = morph(target)
         for i, name in enumerate(frames_of(target), 1):
             out[name] = blend(pairs, i / steps)
+    # the selfie is taken with the hero's back to its opponent: mirror it in place
+    mirror = lambda dots: [(round(w - x, 1), y, r, o) for x, y, r, o in dots]
+    out['turned'] = mirror(idle)
+    for name in frames_of('selfie'):
+        out[name] = mirror(out[name])
     return out, w, h
 
 def geometry():
@@ -144,9 +156,10 @@ def frame_at(hero, t):
         steps = BACKFLIP if big else STAGGER
         if victim == hero and when <= t < when + steps[-1][0]:
             return [name for offset, name in steps if t - when >= offset - 1e-9][-1]
-    for when, attacker, _, _ in HITS:
-        if attacker == hero and when + PUNCH[0][0] <= t < when + PUNCH[-1][0]:
-            return [name for offset, name in PUNCH if t - when >= offset - 1e-9][-1]
+    for when, attacker, _, big in HITS:
+        steps = SELFIE if big else PUNCH
+        if attacker == hero and when + steps[0][0] <= t < when + steps[-1][0]:
+            return [name for offset, name in steps if t - when >= offset - 1e-9][-1]
     return 'idle'
 
 def ramp(t, points):
@@ -262,6 +275,20 @@ def brawl(c):
                      f'<text x="{x}" y="{GROUND - HEIGHT - 10}" fill="{c["muted"]}" font-size="13" font-weight="700" text-anchor="middle">P{i + 1}</text>'
                      '</g>')
     tip, _, fist_height = geometry()
+    # where the phone is in the selfie (its most forward particles), for the flash
+    front = max(x for x, _, _, _ in sets['selfie'])
+    phone = [(x, y) for x, y, _, _ in sets['selfie'] if x > front - 30]
+    px, py = sum(x for x, _ in phone) / len(phone), sum(y for _, y in phone) / len(phone)
+    for when, attacker, victim, big in HITS:
+        if big:
+            x, facing = HEROES[attacker]
+            t = round(when + FLASH, 2)
+            dx, dy, _ = pose(attacker, t)
+            fx, fy = round(x + dx - facing * scale * (px - w / 2)), round(GROUND + dy + scale * (py - h))
+            k = lambda u: f'{min(u, LOOP) / LOOP:.4f}'
+            parts.append(f'<circle cx="{fx}" cy="{fy}" r="2" fill="{c["text"]}" opacity="0">'
+                         f'<animate attributeName="opacity" values="0;0;1;0;0" keyTimes="0;{k(t)};{k(t + .03)};{k(t + .2)};1" dur="{LOOP}s" repeatCount="indefinite"/>'
+                         f'<animate attributeName="r" values="2;2;22;30;2" keyTimes="0;{k(t)};{k(t + .06)};{k(t + .2)};1" dur="{LOOP}s" repeatCount="indefinite"/></circle>')
     for when, attacker, victim, big in HITS:
         x, facing = HEROES[attacker]
         parts += burst(when, round(x + facing * (tip + lunge(attacker, victim))), round(GROUND - fist_height), c['text'])

@@ -9,7 +9,6 @@
 <br /><br />
 
 <a href="https://elhabana.github.io"><img src="https://img.shields.io/badge/Portfolio-elhabana.github.io-A9C0DD?style=for-the-badge&amp;logo=googlechrome&amp;logoColor=10141B&amp;labelColor=DCE5F0" alt="Portfolio: elhabana.github.io" /></a>
-<a href="https://github.com/elhabana"><img src="https://img.shields.io/badge/GitHub-elhabana-151A22?style=for-the-badge&amp;logo=github&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="GitHub: elhabana" /></a>
 <a href="https://www.youtube.com/@elhabana"><img src="https://img.shields.io/badge/YouTube-151A22?style=for-the-badge&amp;logo=youtube&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="YouTube" /></a>
 <a href="https://www.instagram.com/elhabana"><img src="https://img.shields.io/badge/Instagram-151A22?style=for-the-badge&amp;logo=instagram&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Instagram" /></a>
 <a href="https://www.twitch.tv/elhabanaaa"><img src="https://img.shields.io/badge/Twitch-151A22?style=for-the-badge&amp;logo=twitch&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Twitch" /></a>

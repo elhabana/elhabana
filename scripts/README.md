@@ -12,7 +12,8 @@ UN-CREDIBLES cover. `avatar.py` reads the four supplied poses in `assets/avatar`
 with a small standard-library PNG decoder and turns them into a particle bust
 (about 5,000 dots, accent colour, brightness as halftone; inverted on the light
 theme). Every pose shares the same particle positions, so only the eye and mouth
-particles animate, following the same 18-second blink/talk SMIL loop. After the
+particles animate: the eyes blink on an 18-second SMIL loop and the mouth reads
+along with the live terminal, flapping while its letters are typed. After the
 boot screen the particles fly in as swarms and a few keep shimmering.
 
 The header opens with `invaders.py`: an 8-bit Space Invaders round simulated in
@@ -20,8 +21,14 @@ Python (player, shots, hits, bombs, score) and baked into SMIL. The player is hi
 GAME OVER flashes and the screen switches off like an old CRT. Then `boot.py`
 plays a short terminal boot sequence, glitches out and the panels power on from
 a centre line (about 10.5 s in total). DEVELOPER.PROFILE is a live terminal that
-types `whoami`, `ls skills/`, `cat focus.txt` and `cat now_building.txt` in a
-16-second loop. Every overlay is hidden or settled by default, so static
+types `whoami` and `cat now_building.txt` in a 10-second loop; each output first
+appears as noise and decrypts letter by letter while the avatar reads it.
+
+`heroes.py` builds the UN-CREDIBLES cover: the side view of the team's concept
+sketch (`assets/uncredibles/hero.png`, a grayscale crop converted once from the
+supplied JPG) becomes particles, with the body filled in as a plain suit. Four
+identical heroes brawl in two duels on a 6-second loop, with particle bursts on
+every hit. Every overlay is hidden or settled by default, so static
 renderers show the finished banner with the whole terminal session.
 Static renderers show the neutral pose; PNG exports do not preserve animation.
 
@@ -36,14 +43,15 @@ Signals, telemetry, their data and generators, and the Actions workflow were
 removed at the user's request. Banner regeneration is now local only. No API,
 token, commit or push is involved.
 
-The stack uses VS Code. Resolve and CapCut have local app icons:
+The README no longer shows the stack. The Resolve and CapCut icons are still in
+`assets/icons` but unused:
 
 - DaVinci Resolve: https://cdn.simpleicons.org/davinciresolve (Simple Icons,
   CC0 distribution; recolored and framed for readability).
 - CapCut: https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/capcut-icon.svg
   (UXWing; retained original artwork). Brand marks belong to their owners.
 
-External README services: Shields badges and skillicons.
+External README services: Shields badges.
 Core personal details are also readable text.
 Social destinations were read directly from https://github.com/elhabana:
 YouTube @elhabana, Instagram elhabana, Twitch elhabanaaa, Kick elhabanaa.

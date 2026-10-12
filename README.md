@@ -31,34 +31,13 @@ I'm **Cristian Habana / elhabana**, a game developer working mainly with **Unity
 
 ---
 
-## `> ls ./stack`
-
-<picture><source media="(prefers-color-scheme: light)" srcset="https://skillicons.dev/icons?i=unity,cs,vscode,blender,ps&amp;theme=light&amp;perline=5" /><img src="https://skillicons.dev/icons?i=unity,cs,vscode,blender,ps&amp;theme=dark&amp;perline=5" height="48" alt="Unity, C#, VS Code, Blender and Photoshop" /></picture>
-<img src="assets/icons/davinciresolve.svg" width="48" height="48" alt="DaVinci Resolve" title="DaVinci Resolve" />
-<img src="assets/icons/capcut.svg" width="48" height="48" alt="CapCut" title="CapCut" />
-
-<sub>Game development · 3D &amp; visual · Audiovisual</sub>
-
----
-
 ## `> cat ./projects/un-credibles`
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/uncredibles-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="assets/uncredibles-light.svg" />
-  <img src="assets/uncredibles-dark.svg" width="100%" alt="UN-CREDIBLES — multiplayer superhero party game for up to four players. In development." />
+  <img src="assets/uncredibles-dark.svg" width="100%" alt="UN-CREDIBLES — four particle heroes brawling. Multiplayer superhero party game, in development." />
 </picture>
-
-> [!NOTE]
-> **Status: IN DEVELOPMENT** — nothing is released yet.
-
-A multiplayer **superhero party game for up to four players**: quick minigames, humour and competitive chaos.
-
-**Unity 6000.3 · C# · Netcode for GameObjects**
-
-<!-- Add real gameplay footage and a verified public project URL when available.
-     The SVG is a typographic project cover, not an in-game screenshot.
-     No system is marked as implemented until its status is confirmed. -->
 
 ---
 

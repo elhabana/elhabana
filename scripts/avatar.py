@@ -19,7 +19,8 @@ BOX = (68, 145, 355)          # where the bust is drawn: x, y, size
 FACE = (218, 102, 62, 40)     # source ellipse: centre x, centre y, radius x, radius y
 FINE, COARSE = 1.7, 3.2       # particle spacing in source pixels, face vs. the rest
 SWARMS = 36                   # particles fly in as this many independent swarms
-EASE = .003                   # fraction of the 18 s loop a mouth or eye change takes
+EASE = .003                   # fraction of the 18 s loop an eye change takes
+FLAP = .16                    # seconds: one open-and-close of the mouth while reading
 
 
 def read_png(path):
@@ -123,15 +124,44 @@ def timeline(looks, index):
     points.append((1, looks[STATES[-1]][index]))
     return (';'.join(str(v) for _, v in points), ';'.join(str(t) for t, _ in points))
 
-def dot(x, y, looks):
+def reading(looks, index, speech):
+    """Flap the mouth while the terminal types; closed the rest of the cycle."""
+    _, cycle, spans = speech
+    closed, open_ = looks['neutral'][index], looks['talk'][index]
+    points = [(0, closed)]
+    for start, end in spans:
+        t, opened = start, True
+        while t < end - 1e-6:
+            points.append((t, open_ if opened else closed))
+            t, opened = t + FLAP / 2, not opened
+        points.append((end, closed))
+    keys, values = [], []
+    for t, v in points:
+        k = round(t / cycle, 4)
+        if keys and k <= keys[-1]:
+            continue
+        keys.append(k)
+        values.append(v)
+    return ';'.join(map(str, values)), ';'.join(map(str, keys))
+
+def dot(x, y, looks, speech):
     r, o = looks['neutral']
-    if len(set(looks.values())) == 1:
+    if looks['talk'] != looks['neutral']:
+        # mouth: reads along with the live terminal
+        begin, cycle, _ = speech
+        anims = ''.join(f'<animate attributeName="{attribute}" values="{values}" keyTimes="{times}" '
+                        f'dur="{cycle}s" begin="{begin}s" calcMode="discrete" repeatCount="indefinite"/>'
+                        for index, attribute in enumerate(('r', 'fill-opacity'))
+                        for values, times in [reading(looks, index, speech)])
+    elif looks['blink'] != looks['neutral']:
+        # eyes: keep blinking on their own 18-second loop
+        eyes = {frame: looks['blink'] if 'blink' in frame else looks['neutral'] for frame in FRAMES}
+        anims = ''.join(f'<animate attributeName="{attribute}" dur="18s" values="{values}" '
+                        f'keyTimes="{times}" repeatCount="indefinite"/>'
+                        for index, attribute in enumerate(('r', 'fill-opacity'))
+                        for values, times in [timeline(eyes, index)])
+    else:
         return f'<circle cx="{x}" cy="{y}" r="{r}" fill-opacity="{o}"/>'
-    anims = ''
-    for index, attribute in enumerate(('r', 'fill-opacity')):
-        values, times = timeline(looks, index)
-        anims += (f'<animate attributeName="{attribute}" dur="18s" values="{values}" '
-                  f'keyTimes="{times}" repeatCount="indefinite"/>')
     return f'<circle cx="{x}" cy="{y}" r="{r}" fill-opacity="{o}">{anims}</circle>'
 
 def swarm(i, rnd):
@@ -145,12 +175,12 @@ def swarm(i, rnd):
             f'keyTimes="0;{k};1" dur="{dur:.2f}s" fill="freeze"/>'
             f'<animate attributeName="opacity" values="0;0;1" keyTimes="0;{k};1" dur="{dur:.2f}s" fill="freeze"/>')
 
-def bust(c):
+def bust(c, speech):
     invert = int(c['bg'][1:3], 16) > 128
     rnd = random.Random(11)
     groups = [[] for _ in range(SWARMS)]
     for x, y, looks in particles(invert):
-        groups[rnd.randrange(SWARMS)].append(dot(x, y, looks))
+        groups[rnd.randrange(SWARMS)].append(dot(x, y, looks, speech))
     parts = [f'<g fill="{c["accent"]}">']
     for i, dots in enumerate(groups):
         parts.append(swarm(i, rnd))
@@ -162,7 +192,7 @@ def bust(c):
         parts.append('</g>')
     return parts + ['</g>']
 
-def scene(c):
+def scene(c, speech):
     """Static renderers show the neutral pose fully assembled; SMIL adds the motion."""
     parts = [
         '<defs><clipPath id="avatar-clip"><rect x="49" y="144" width="389" height="367" rx="4"/></clipPath></defs>',
@@ -175,7 +205,7 @@ def scene(c):
         line(55, 329, 432, 329, c['line'], 'opacity=".45"'),
         '<g clip-path="url(#avatar-clip)">',
     ]
-    parts += bust(c)
+    parts += bust(c, speech)
     parts += [
         f'<rect x="49" y="144" width="389" height="2" fill="{c["accent"]}" opacity=".45">'
         '<animate attributeName="y" values="144;509;144" dur="6s" calcMode="linear" repeatCount="indefinite"/></rect>',

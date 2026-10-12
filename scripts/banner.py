@@ -1,17 +1,21 @@
 """Generate an original editor-inspired header and compact project cover."""
+import random
 from html import escape
 
 from visuals import THEMES, text, rect, line, svg, save
 from avatar import scene
 from boot import boot, END
 from invaders import invaders
+from heroes import brawl
 
 
-CYCLE = 16  # seconds: the live terminal types its commands, holds, clears and starts again
+CYCLE = 10  # seconds: the live terminal types, decrypts, holds, clears and starts again
+FRAME = .05 # seconds per decryption frame
+LEAD = 4    # frames of pure noise before the first letter locks in
+NOISE = '#$%&@!?*<>/=+0123456789ABCDEFX'
 SESSION = (('whoami', (('Cristian Habana', 'text', 700), (' / Game Developer', 'muted', 400))),
-           ('ls skills/', (('unity  csharp  netcode  blender  animation  video', 'text', 400),)),
-           ('cat focus.txt', (('gameplay systems · multiplayer · game AI', 'text', 400),)),
            ('cat now_building.txt', (('UN-CREDIBLES', 'accent', 700), (' [IN DEVELOPMENT]', 'accent', 400))))
+ROW = lambda i: 214+i*124   # y of each command; its output goes 40 below
 
 def loop(attribute, full, start, done):
     """Hidden until start, grows to full by done, cleared at the end of each cycle.
@@ -21,21 +25,58 @@ def loop(attribute, full, start, done):
             f'keyTimes="0;{k(start)};{k(done)};{k(CYCLE-.6)};{k(CYCLE-.5)};1" '
             f'dur="{CYCLE}s" begin="{END}s" repeatCount="indefinite"/>')
 
-def terminal(c):
+def window(start, end):
+    """Visible only between start and end of each cycle (discrete)."""
+    k = lambda t: f'{t/CYCLE:.4f}'
+    return (f'<animate attributeName="opacity" values="0;1;0" keyTimes="0;{k(start)};{k(end)}" '
+            f'dur="{CYCLE}s" begin="{END}s" calcMode="discrete" repeatCount="indefinite"/>')
+
+def script():
+    """When each command is typed and each output decrypted: [(i, start, end, start, end)].
+    The avatar reads along, so its mouth uses the same timings."""
     out,t=[],.5
     for i,(command,result) in enumerate(SESSION):
-        y=180+i*90
-        width=(len(command)+2)*10+12
         typed=t+len(command)*.06
-        out.append(f'<clipPath id="term-c{i}"><rect x="492" y="{y-22}" width="{width}" height="30">{loop("width",width,t,typed)}</rect></clipPath>')
-        out.append(f'<text x="494" y="{y}" font-size="18" clip-path="url(#term-c{i})"><tspan fill="{c["accent"]}" font-weight="700">$ </tspan>'
+        shown=typed+.25
+        read=shown+(LEAD+sum(len(value) for value,_,_ in result))*FRAME
+        out.append((i,t,typed,shown,read))
+        t=read+.7
+    assert out[-1][4]<CYCLE-.8, 'the session does not fit in one cycle'
+    return out
+
+def speech():
+    """Typing stretches for the avatar's mouth: (begin, cycle, [(start, end)])."""
+    return END,CYCLE,[span for _,a,b,c,d in script() for span in ((a,b),(c,d))]
+
+def decrypt(c, i, y, result, shown, read):
+    """Noise that locks into the real text one letter at a time, then the real text."""
+    rnd=random.Random(i)
+    plain=''.join(value for value,_,_ in result)
+    frames=[]
+    for f in range(LEAD+len(plain)):
+        locked=max(0,f-LEAD+1)
+        noise=''.join(ch if ch==' ' else rnd.choice(NOISE) for ch in plain[locked:])
+        t=shown+f*FRAME
+        frames.append(f'<text x="494" y="{y}" font-size="20" xml:space="preserve" opacity="0">{window(t,t+FRAME)}'
+                      f'<tspan fill="{c["text"]}">{escape(plain[:locked])}</tspan>'
+                      f'<tspan fill="{c["accent"]}" fill-opacity=".6">{escape(noise)}</tspan></text>')
+    spans=''.join(f'<tspan fill="{c[colour]}" font-weight="{weight}">{escape(value)}</tspan>' for value,colour,weight in result)
+    frames.append(f'<text x="494" y="{y}" font-size="20" xml:space="preserve">{window(read,CYCLE-.5)}{spans}</text>')
+    return frames
+
+def terminal(c):
+    out=[]
+    for i,start,typed,shown,read in script():
+        command,result=SESSION[i]
+        y=ROW(i)
+        width=(len(command)+2)*11+12
+        out.append(f'<clipPath id="term-c{i}"><rect x="492" y="{y-24}" width="{width}" height="32">{loop("width",width,start,typed)}</rect></clipPath>')
+        out.append(f'<text x="494" y="{y}" font-size="20" clip-path="url(#term-c{i})"><tspan fill="{c["accent"]}" font-weight="700">$ </tspan>'
                    f'<tspan fill="{c["text"]}">{escape(command)}</tspan></text>')
-        shown=typed+.3
-        spans=''.join(f'<tspan fill="{c[colour]}" font-weight="{weight}">{escape(value)}</tspan>' for value,colour,weight in result)
-        out.append(f'<text x="494" y="{y+32}" font-size="18" xml:space="preserve">{loop("opacity",1,shown,shown+.01)}{spans}</text>')
-        t=shown+.9
+        out+=decrypt(c,i,y+40,result,shown,read)
+    i,_,_,_,read=script()[-1]
     chars=sum(len(value) for value,_,_ in SESSION[-1][1])
-    out.append(f'<g>{loop("opacity",1,t-.9,t-.89)}<rect x="{494+chars*10+6}" y="{180+3*90+32-16}" width="10" height="20" fill="{c["accent"]}">'
+    out.append(f'<g>{window(read,CYCLE-.5)}<rect x="{494+chars*11+8}" y="{ROW(i)+40-18}" width="11" height="22" fill="{c["accent"]}">'
                '<animate attributeName="opacity" values="1;0" dur="1s" calcMode="discrete" repeatCount="indefinite"/></rect></g>')
     return out
 
@@ -53,7 +94,7 @@ def render(theme):
     b += [rect(34,88,418,468,c['bg'],c['line'],5),rect(474,88,672,468,c['bg'],c['line'],5)]
     b += [text(50,114,'SYSTEM.VIEW',c['accent'],15,weight=700),line(34,130,452,130,c['line'])]
     b += [text(492,114,'DEVELOPER.PROFILE',c['accent'],15,weight=700),text(1127,114,'@elhabana',c['text'],15,'end'),line(474,130,1146,130,c['line'])]
-    b += scene(c)
+    b += scene(c,speech())
     b += terminal(c)
     b += ['</g></g></g>',text(1146,581,'CODE / CREATE / ITERATE',c['muted'],12,'end')]
     b += boot(c)
@@ -62,12 +103,10 @@ def render(theme):
 
 def project(theme):
     c=THEMES[theme]
-    b=[text(32,38,'SELECTED WORK / 01',c['muted'],14),text(1148,38,'IN DEVELOPMENT',c['accent'],14,'end',700)[:-7]+'<animate attributeName="opacity" values="1;.25" dur="1.6s" calcMode="discrete" repeatCount="indefinite"/></text>',line(32,56,1148,56,c['line']),
-       f'<rect x="32" y="55" width="160" height="2" fill="{c["accent"]}"><animate attributeName="x" values="32;988;32" dur="4s" calcMode="linear" repeatCount="indefinite"/></rect>',text(32,128,'UN-CREDIBLES',c['text'],52,weight=700),text(34,168,'Multiplayer superhero party game',c['muted'],20)]
-    for i in range(4):
-        x=904+i*61
-        b += [rect(x,92,44,58,c['panel'],c['line'],5),text(x+22,130,f'P{i+1}',c['accent'],17,'middle')]
-    return svg(1180,210,theme,'UN-CREDIBLES: multiplayer superhero party game, in development',b)
+    b=[text(32,40,'UN-CREDIBLES',c['text'],18,weight=700),
+       text(1148,40,'IN DEVELOPMENT',c['accent'],13,'end',700)[:-7]+'<animate attributeName="opacity" values="1;.25" dur="1.6s" calcMode="discrete" repeatCount="indefinite"/></text>']
+    b+=brawl(c)
+    return svg(1180,300,theme,'UN-CREDIBLES: four particle heroes brawling; multiplayer superhero party game, in development',b)
 
 if __name__=='__main__':
     for theme in THEMES:

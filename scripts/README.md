@@ -24,11 +24,13 @@ a centre line (about 10.5 s in total). DEVELOPER.PROFILE is a live terminal that
 types `whoami` and `cat now_building.txt` in a 10-second loop; each output first
 appears as noise and decrypts letter by letter while the avatar reads it.
 
-`heroes.py` builds the UN-CREDIBLES cover: the side view of the team's concept
-sketch (`assets/uncredibles/hero.png`, a grayscale crop converted once from the
-supplied JPG) becomes particles, with the body filled in as a plain suit. Four
-identical heroes brawl in two duels on a 6-second loop, with particle bursts on
-every hit. Every overlay is hidden or settled by default, so static
+`heroes.py` builds the UN-CREDIBLES cover from two of the team's concept
+sketches, a side view and a punch. Their particles were extracted once (line art
+as bright dots, the body filled in as a plain suit) and are stored in
+`assets/uncredibles/particles.json`; the drawings are not kept in the repo. The
+in-between punch frames are a particle morph between the two poses. Four
+identical heroes brawl in two duels on a 6-second loop: wind-up, punch, hold,
+pull back, and a particle burst where each fist lands. Every overlay is hidden or settled by default, so static
 renderers show the finished banner with the whole terminal session.
 Static renderers show the neutral pose; PNG exports do not preserve animation.
 

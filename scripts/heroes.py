@@ -1,63 +1,89 @@
 """UN-CREDIBLES cover: four identical particle heroes brawling in two duels.
 
-The hero comes from the team's concept sketch (side view) in
-assets/uncredibles/hero.png. Line art becomes bright particles; the body below
-the neck is filled with dimmer particles as a plain suit.
+The hero comes from two of the team's concept sketches, a side view and a
+punch. Their particles were extracted once (line art as bright dots, the body
+below the neck filled as a plain suit) and live in assets/uncredibles/particles.json;
+the drawings themselves are not kept in the repo. The in-between frames of the
+punch are a particle morph between the two poses.
 """
+import json
 import math
 import random
-from collections import deque
 from functools import lru_cache
 
-from avatar import read_png
 from visuals import ASSETS
 
-STEP = 6            # particle spacing in source pixels
-NECK = 178          # source row where the head ends and the suit starts
+STEP = 6            # particle spacing in source pixels, as extracted
+NECKS = {'hero': 178, 'punch': 128}  # source row where the head ends and the suit starts
+FRAMES = 5          # idle, three in-betweens, punch
+BODY_ROWS = 36      # the bodies are matched in this many rows, whatever their height
 HEIGHT = 220        # hero height in the cover
 GROUND = 276
 LOOP = 6            # seconds: one round of the brawl
 DT = .05
 # x of each hero's feet and the way it faces (+1 right, -1 left): two duels
-HEROES = ((230, 1), (430, -1), (750, 1), (950, -1))
+HEROES = ((250, 1), (400, -1), (780, 1), (930, -1))
 # (time, attacker, victim, big): a big hit sends the victim flying
 HITS = ((.5, 0, 1, False), (1.1, 3, 2, False), (1.9, 1, 0, False),
         (2.6, 2, 3, False), (3.4, 0, 1, True), (4.2, 3, 2, True))
 
 
 @lru_cache(maxsize=None)
-def particles():
-    """[(x, y, radius, opacity)] in source pixels; deterministic."""
-    img = read_png(ASSETS / 'uncredibles' / 'hero.png')
-    h, w = len(img), len(img[0])
-    lum = [[p[0] for p in row] for row in img]
-    # thicken the strokes so the flood fill cannot leak through gaps in the sketch
-    wall = [[False] * w for _ in range(h)]
-    for y in range(h):
-        for x in range(w):
-            if lum[y][x] < 150:
-                for j in range(max(0, y - 2), min(h, y + 3)):
-                    for i in range(max(0, x - 2), min(w, x + 3)):
-                        wall[j][i] = True
-    outside = [[False] * w for _ in range(h)]
-    queue = deque([(x, y) for y in range(h) for x in (0, w - 1)] + [(x, y) for x in range(w) for y in (0, h - 1)])
-    while queue:
-        x, y = queue.popleft()
-        if 0 <= x < w and 0 <= y < h and not outside[y][x] and not wall[y][x]:
-            outside[y][x] = True
-            queue.extend(((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
-    rnd, dots = random.Random(5), []
-    for gy in range(0, h, STEP):
-        for gx in range(0, w, STEP):
-            cells = [(x, y) for y in range(gy, min(gy + STEP, h)) for x in range(gx, min(gx + STEP, w))]
-            ink = 1 - min(lum[y][x] for x, y in cells) / 255
-            jitter = STEP * .25
-            x, y = round(gx + STEP / 2 + rnd.uniform(-jitter, jitter), 1), round(gy + STEP / 2 + rnd.uniform(-jitter, jitter), 1)
-            if ink > .45:
-                dots.append((x, y, round(STEP * (.22 + .14 * ink), 2), round(.55 + .45 * ink, 2)))
-            elif gy > NECK and sum(not outside[y][x] for x, y in cells) > len(cells) * .7:
-                dots.append((x, y, round(STEP * .22, 2), .42))
-    return dots, w, h
+def particles(name):
+    """[(x, y, radius, opacity)] in source pixels of one drawing, with its size."""
+    pose = json.loads((ASSETS / 'uncredibles' / 'particles.json').read_text(encoding='utf-8'))[name]
+    return [tuple(d) for d in pose['dots']], pose['width'], pose['height']
+
+def anchor(dots, neck):
+    """Head centre x and ground y: the two drawings are aligned on these."""
+    head = [x for x, y, _, _ in dots if y <= neck]
+    return (min(head) + max(head)) / 2, max(y for _, y, _, _ in dots)
+
+def by_rows(a, b, height):
+    """Pair two particle sets row by row, left to right inside each row."""
+    def rows(dots):
+        top, out = min(d[1] for d in dots), {}
+        for d in dots:
+            out.setdefault(int((d[1] - top) // height), []).append(d)
+        return {k: sorted(v) for k, v in out.items()}
+    ra, rb, pairs = rows(a), rows(b), []
+    for k in sorted(set(ra) | set(rb)):
+        x = ra.get(k) or ra[min(ra, key=lambda j: abs(j - k))]
+        y = rb.get(k) or rb[min(rb, key=lambda j: abs(j - k))]
+        m = max(len(x), len(y))
+        pairs += [(x[i * len(x) // m], y[i * len(y) // m]) for i in range(m)]
+    return pairs
+
+@lru_cache(maxsize=None)
+def frames():
+    """FRAMES particle sets from idle to punch, in the idle drawing's pixels.
+    Head pairs with head (so the face keeps its shape) and body with body."""
+    idle, punch = particles('hero'), particles('punch')
+    (ix, iy), (px, py) = anchor(idle[0], NECKS['hero']), anchor(punch[0], NECKS['punch'])
+    moved = [(x - px + ix, y - py + iy, r, o) for x, y, r, o in punch[0]]
+    neck = NECKS['punch'] - py + iy
+    pairs = by_rows([d for d in idle[0] if d[1] <= NECKS['hero']], [d for d in moved if d[1] <= neck], STEP)
+    # bodies have different heights (the punch is a crouch): match them in BODY_ROWS rows
+    a, b = [d for d in idle[0] if d[1] > NECKS['hero']], [d for d in moved if d[1] > neck]
+    at, bt = min(d[1] for d in a), min(d[1] for d in b)
+    sa, sb = (max(d[1] for d in a) - at) / BODY_ROWS, (max(d[1] for d in b) - bt) / BODY_ROWS
+    squash = lambda dots, top, step: [(x, (y - top) / step, r, o) for x, y, r, o in dots]
+    for u, v in by_rows(squash(a, at, sa), squash(b, bt, sb), 1):
+        pairs.append(((u[0], at + u[1] * sa, u[2], u[3]), (v[0], bt + v[1] * sb, v[2], v[3])))
+    out = []
+    for f in range(FRAMES):
+        t = f / (FRAMES - 1)
+        e = t * t * (3 - 2 * t)
+        out.append([tuple(round(p + (q - p) * e, 1) for p, q in zip(u, v)) for u, v in pairs])
+    return out, idle[1], idle[2]
+
+def frame_at(hero, t):
+    """Which punch frame a hero shows: wind up, hit, hold, pull back."""
+    steps = ((-.2, 1), (-.16, 2), (-.12, 3), (-.08, 4), (.15, 3), (.2, 2), (.25, 1), (.3, 0))
+    for when, attacker, _, _ in HITS:
+        if attacker == hero and when - .2 <= t < when + .3:
+            return [f for offset, f in steps if t - when >= offset - 1e-9][-1]
+    return 0
 
 def ramp(t, points):
     """Piecewise-linear value at t from [(time, value)]; 0 outside."""
@@ -75,7 +101,7 @@ def pose(hero, t):
     dy += 2.5 * math.sin(2 * math.pi * (t / 1.2 + hero * .3))
     for when, attacker, victim, big in HITS:
         if hero == attacker:
-            dx += facing * ramp(t, [(when - .15, 0), (when, 34), (when + .35, 0)])
+            dx += facing * ramp(t, [(when - .2, 0), (when - .08, 42), (when + .15, 42), (when + .4, 0)])
         if hero == victim and not big:
             dx -= facing * ramp(t, [(when, 0), (when + .12, 46), (when + .7, 0)])
             angle -= facing * ramp(t, [(when, 0), (when + .12, 16), (when + .6, 0)])
@@ -116,22 +142,45 @@ def burst(when, x, y, ink):
                    f'keyTimes="0;{k(when)};{k(when + .4)};1" dur="{LOOP}s" repeatCount="indefinite"/></circle>')
     return out
 
+def visibility(hero, f):
+    """Discrete opacity schedule of one frame for one hero over the loop."""
+    keys, values = [], []
+    for i in range(int(LOOP / .02)):
+        t = round(i * .02, 2)
+        v = int(frame_at(hero, t) == f)
+        if not values or v != values[-1]:
+            keys.append(f'{t / LOOP:.4f}')
+            values.append(str(v))
+    return (f'<animate attributeName="opacity" values="{";".join(values)}" keyTimes="{";".join(keys)}" '
+            f'dur="{LOOP}s" calcMode="discrete" repeatCount="indefinite"/>')
+
 def brawl(c):
-    dots, w, h = particles()
+    sets, w, h = frames()
     scale = HEIGHT / h
-    parts = ['<defs><g id="hero">' + ''.join(f'<circle cx="{x}" cy="{y}" r="{r}" fill-opacity="{o}"/>' for x, y, r, o in dots) + '</g></defs>',
+    defs = ''.join(f'<g id="hero-f{f}">' + ''.join(f'<circle cx="{x}" cy="{y}" r="{r}" fill-opacity="{o}"/>' for x, y, r, o in dots) + '</g>'
+                   for f, dots in enumerate(sets))
+    parts = [f'<defs>{defs}</defs>',
              f'<line x1="40" y1="{GROUND + 2}" x2="1140" y2="{GROUND + 2}" stroke="{c["line"]}" stroke-dasharray="2 6"/>']
     for i, (x, facing) in enumerate(HEROES):
         keys, moves, turns = track(i)
-        # the sketch faces left; mirror it for heroes facing right
+        # the sketches face left; mirror them for heroes facing right
         place = f'translate({x} {GROUND}) scale({-facing * scale:.4f} {scale:.4f}) translate({-w / 2:.0f} {-h})'
+        uses = ''
+        for f in range(FRAMES):
+            hidden = '' if f == 0 else ' opacity="0"'
+            uses += f'<use href="#hero-f{f}" transform="{place}"{hidden}>{visibility(i, f)}</use>'
         parts.append(f'<ellipse cx="{x}" cy="{GROUND + 2}" rx="38" ry="5" fill="{c["accent"]}" opacity=".12"/>'
                      f'<g><animateTransform attributeName="transform" type="translate" values="{moves}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
-                     f'<g><animateTransform attributeName="transform" type="rotate" values="{turns}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
-                     f'<use href="#hero" fill="{c["accent"]}" transform="{place}"/>'
+                     f'<g fill="{c["accent"]}"><animateTransform attributeName="transform" type="rotate" values="{turns}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
+                     + uses +
                      f'<text x="{x}" y="{GROUND - HEIGHT - 10}" fill="{c["muted"]}" font-size="13" font-weight="700" text-anchor="middle">P{i + 1}</text>'
                      '</g></g>')
+    # bursts where the fist lands: the punch reaches this far past the attacker's feet
+    tip = min(x for x, _, _, _ in sets[-1])
+    fist = [y for x, y, _, _ in sets[-1] if x < tip + 12]
+    reach = (w / 2 - tip) * scale + 42
+    height = (h - sum(fist) / len(fist)) * scale
     for when, attacker, victim, _ in HITS:
-        x = (HEROES[attacker][0] + HEROES[victim][0]) / 2
-        parts += burst(when, round(x), round(GROUND - HEIGHT * .55), c['text'])
+        x, facing = HEROES[attacker]
+        parts += burst(when, round(x + facing * reach), round(GROUND - height), c['text'])
     return parts

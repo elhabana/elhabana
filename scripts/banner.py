@@ -1,6 +1,7 @@
 """Generate an original editor-inspired header and compact project cover."""
 from visuals import THEMES, text, rect, line, svg, save
 from avatar import scene
+from boot import boot
 
 
 def animate(attribute, values, times=(0, .16, .24, .34, .50, .60, .76, .86, 1)):
@@ -32,11 +33,13 @@ def render(theme):
     b.append(f'<rect x="494" y="513" width="0" height="1" fill="{c["accent"]}">'
              +animate('width',[0,632],[0,1])+'</rect>')
     b += [text(34,581,'UNITY + C#',c['muted'],12),text(1146,581,'CODE / CREATE / ITERATE',c['muted'],12,'end')]
+    b += boot(c)
     return svg(1180,610,theme,'elhabana: Unity and C# game developer; gameplay, 3D, animation and audiovisual systems',b)
 
 def project(theme):
     c=THEMES[theme]
-    b=[text(32,38,'SELECTED WORK / 01',c['muted'],14),text(1148,38,'IN DEVELOPMENT',c['accent'],14,'end'),line(32,56,1148,56,c['line']),text(32,128,'UN-CREDIBLES',c['text'],52,weight=700),text(34,168,'Multiplayer superhero party game',c['muted'],20)]
+    b=[text(32,38,'SELECTED WORK / 01',c['muted'],14),text(1148,38,'IN DEVELOPMENT',c['accent'],14,'end',700)[:-7]+'<animate attributeName="opacity" values="1;.25" dur="1.6s" calcMode="discrete" repeatCount="indefinite"/></text>',line(32,56,1148,56,c['line']),
+       f'<rect x="32" y="55" width="160" height="2" fill="{c["accent"]}"><animate attributeName="x" values="32;988;32" dur="4s" calcMode="linear" repeatCount="indefinite"/></rect>',text(32,128,'UN-CREDIBLES',c['text'],52,weight=700),text(34,168,'Multiplayer superhero party game',c['muted'],20)]
     for i in range(4):
         x=904+i*61
         b += [rect(x,92,44,58,c['panel'],c['line'],5),text(x+22,130,f'P{i+1}',c['accent'],17,'middle')]

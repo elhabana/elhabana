@@ -9,7 +9,9 @@ python -m unittest discover -s scripts -p 'test_*.py'
 
 `visuals.py` owns the palette. `banner.py` generates the dark/light header and
 UN-CREDIBLES cover. `avatar.py` embeds four supplied poses in SYSTEM.VIEW and
-swaps the expressions in an 18-second SVG SMIL loop. The PNGs in `assets/avatar`
+swaps the expressions in an 18-second SVG SMIL loop. `boot.py` adds a one-shot terminal boot
+sequence (about 7 s) on top of the header; it wipes away to reveal SYSTEM.VIEW.
+The overlay is hidden by default, so static renderers show the banner itself. The PNGs in `assets/avatar`
 are 420px copies of the supplied images. Both banner SVGs are self-contained,
 so the avatar also appears when the README is rendered through an image proxy.
 Static renderers show the neutral pose; PNG exports do not preserve animation.
@@ -32,7 +34,7 @@ The stack uses VS Code. Resolve and CapCut have local app icons:
 - CapCut: https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/capcut-icon.svg
   (UXWing; retained original artwork). Brand marks belong to their owners.
 
-External README services: readme-typing-svg, Shields badges and skillicons.
+External README services: Shields badges and skillicons.
 Core personal details are also readable text.
 Social destinations were read directly from https://github.com/elhabana:
 YouTube @elhabana, Instagram elhabana, Twitch elhabanaaa, Kick elhabanaa.

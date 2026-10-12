@@ -6,13 +6,9 @@
   <img src="assets/banner-dark.svg" width="100%" alt="elhabana // interactive systems — Cristian Habana, Unity and C# game developer, 3D and audiovisual creator" />
 </picture>
 
-<br />
+<br /><br />
 
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&amp;weight=500&amp;size=24&amp;duration=3000&amp;pause=1100&amp;color=42658D&amp;center=true&amp;vCenter=true&amp;width=880&amp;height=64&amp;lines=Cristian+Habana+%E2%80%94+Game+Developer+%26+Digital+Creator;Unity+%2F+C%23+%2F+Gameplay+Systems;Games+%C2%B7+3D+%C2%B7+Animation+%C2%B7+Audiovisual;Building+interactive+things%2C+one+system+at+a+time" />
-  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&amp;weight=500&amp;size=24&amp;duration=3000&amp;pause=1100&amp;color=A9C0DD&amp;center=true&amp;vCenter=true&amp;width=880&amp;height=64&amp;lines=Cristian+Habana+%E2%80%94+Game+Developer+%26+Digital+Creator;Unity+%2F+C%23+%2F+Gameplay+Systems;Games+%C2%B7+3D+%C2%B7+Animation+%C2%B7+Audiovisual;Building+interactive+things%2C+one+system+at+a+time" width="100%" alt="Cristian Habana — Game Developer and Digital Creator. Unity / C# / Gameplay Systems. Games, 3D, animation and audiovisual." />
-</picture>
-
+<a href="https://elhabana.github.io"><img src="https://img.shields.io/badge/Portfolio-elhabana.github.io-A9C0DD?style=for-the-badge&amp;logo=googlechrome&amp;logoColor=10141B&amp;labelColor=DCE5F0" alt="Portfolio: elhabana.github.io" /></a>
 <a href="https://github.com/elhabana"><img src="https://img.shields.io/badge/GitHub-elhabana-151A22?style=for-the-badge&amp;logo=github&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="GitHub: elhabana" /></a>
 <a href="https://www.youtube.com/@elhabana"><img src="https://img.shields.io/badge/YouTube-151A22?style=for-the-badge&amp;logo=youtube&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="YouTube" /></a>
 <a href="https://www.instagram.com/elhabana"><img src="https://img.shields.io/badge/Instagram-151A22?style=for-the-badge&amp;logo=instagram&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Instagram" /></a>
@@ -23,7 +19,7 @@
 
 ---
 
-## this is me
+## `> whoami`
 
 I'm **Cristian Habana / elhabana**, a game developer working mainly with **Unity and C#**. I combine gameplay programming with 3D and audiovisual creation.
 
@@ -38,7 +34,7 @@ I'm **Cristian Habana / elhabana**, a game developer working mainly with **Unity
 
 <div align="center">
 
-## my stack
+## `> ls ./stack`
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="https://skillicons.dev/icons?i=unity,cs,vscode,blender,ps&amp;theme=light&amp;perline=5" />
@@ -58,7 +54,7 @@ I'm **Cristian Habana / elhabana**, a game developer working mainly with **Unity
 
 ---
 
-## selected work
+## `> cat ./projects/un-credibles`
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/uncredibles-dark.svg" />
@@ -66,11 +62,12 @@ I'm **Cristian Habana / elhabana**, a game developer working mainly with **Unity
   <img src="assets/uncredibles-dark.svg" width="100%" alt="UN-CREDIBLES — multiplayer superhero party game for up to four players. In development." />
 </picture>
 
-A **superhero party game for up to four players**: quick rounds, different minigames, humour and competitive chaos. Players earn points across challenges to decide the overall winner.
+> [!NOTE]
+> **Status: IN DEVELOPMENT** — nothing is released yet.
+
+A multiplayer **superhero party game for up to four players**: quick minigames, humour and competitive chaos.
 
 **Unity 6000.3 · C# · Netcode for GameObjects**
-
-**In development:** player management, local and online multiplayer, AI players, lobby, match and scene flow, reusable minigames and character customization.
 
 <!-- Add real gameplay footage and a verified public project URL when available.
      The SVG is a typographic project cover, not an in-game screenshot.
@@ -78,4 +75,4 @@ A **superhero party game for up to four players**: quick rounds, different minig
 
 ---
 
-<p align="center"><sub>elhabana // code · create · iterate</sub></p>
+<p align="center"><sub><code>&gt; exit</code> · session closed · elhabana // code · create · iterate</sub></p>

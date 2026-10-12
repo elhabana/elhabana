@@ -21,9 +21,18 @@ class ProfileTests(unittest.TestCase):
             self.assertEqual(len(images),len(avatar.FRAMES))
             self.assertTrue(all(image.get('href','').startswith('data:image/png;base64,') for image in images))
             for node in root.findall('.//{http://www.w3.org/2000/svg}animate'):
-                self.assertEqual(len(node.get('values').split(';')),len(node.get('keyTimes').split(';')))
-                self.assertEqual(node.get('repeatCount'),'indefinite')
+                if node.get('keyTimes'):
+                    self.assertEqual(len(node.get('values').split(';')),len(node.get('keyTimes').split(';')))
+                self.assertTrue(node.get('repeatCount')=='indefinite' or node.get('fill')=='freeze')
             ET.fromstring(banner.project(theme))
+
+    def test_boot_overlay_is_static_safe(self):
+        for theme in THEMES:
+            root=ET.fromstring(banner.render(theme))
+            clip=root.find('.//{http://www.w3.org/2000/svg}clipPath[@id="boot-wipe"]')
+            self.assertIsNotNone(clip)
+            overlay=list(root).index(clip)+1
+            self.assertEqual(list(root)[overlay].get('opacity'),'0')
 
     def test_readme_local_assets(self):
         readme=(ASSETS.parent/'README.md').read_text(encoding='utf-8')

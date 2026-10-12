@@ -31,14 +31,27 @@ HEROES = ((265, 1), (385, -1), (795, 1), (915, -1))
 # (time, attacker, victim, big): a big hit sends the victim into a backflip
 HITS = ((.5, 0, 1, False), (1.1, 3, 2, False), (1.9, 1, 0, False),
         (2.6, 2, 3, False), (3.4, 0, 1, True), (4.2, 3, 2, True))
+# morph steps from standing to each drawing (8 for the punch: smoother, not blurrier)
+STEPS = {'punch': 8, 'hit': 4, 'flip': 6, 'land': 4}
+
+def frames_of(name):
+    """In-between names from standing towards a drawing, e.g. punch1..punch7, punch."""
+    n = STEPS[name]
+    return [f'{name}{i}' for i in range(1, n)] + [name]
+
+def sweep(names, start, end):
+    """Spread frames evenly over [start, end): [(offset, name)]."""
+    return [(round(start + (end - start) * i / len(names), 3), n) for i, n in enumerate(names)]
+
 # which frame each hero shows, relative to the moment of a hit
-PUNCH = ((-.22, 'punch1'), (-.17, 'punch2'), (-.12, 'punch3'), (-.06, 'punch'),
-         (.15, 'punch3'), (.2, 'punch2'), (.25, 'punch1'), (.3, 'idle'))
-STAGGER = ((0, 'hit1'), (.04, 'hit'), (.24, 'hit1'), (.32, 'idle'))
-# takes the hit, backflips, lands like a hero, then walks back
-BACKFLIP = ((0, 'hit1'), (.04, 'hit'), (.12, 'flip1'), (.16, 'flip2'), (.2, 'flip'),
-            (.56, 'flip2'), (.6, 'land1'), (.66, 'land'), (1.0, 'land1'), (1.1, 'idle'))
-LANDING = .66       # seconds after a big hit: feet (and fist) hit the ground
+PUNCH = (sweep(frames_of('punch'), -.3, -.06) + sweep(frames_of('punch')[-2::-1], .15, .39)
+         + [(.39, 'idle')])
+STAGGER = sweep(frames_of('hit'), 0, .06) + sweep(frames_of('hit')[-2::-1], .24, .33) + [(.33, 'idle')]
+# a big hit goes straight into the backflip (no stagger first), lands like a hero, walks back
+BACKFLIP = (sweep(frames_of('flip'), 0, .12) + sweep(frames_of('flip')[-2:-5:-1], .5, .56)
+            + sweep(frames_of('land'), .56, .68) + sweep(frames_of('land')[-2::-1], 1.0, 1.09)
+            + [(1.09, 'idle')])
+LANDING = .66       # seconds after a big hit: feet (and fist) hit the ground (land frame at .65)
 
 
 @lru_cache(maxsize=None)
@@ -104,10 +117,10 @@ def poses():
     """Every particle set the heroes switch between, by name, in standing-drawing pixels."""
     idle, w, h = drawing('hero')
     out = {'idle': idle}
-    for target, steps in (('punch', 4), ('hit', 2), ('flip', 3), ('land', 2)):
+    for target, steps in STEPS.items():
         pairs = morph(target)
-        for i in range(1, steps + 1):
-            out[target if i == steps else f'{target}{i}'] = blend(pairs, i / steps)
+        for i, name in enumerate(frames_of(target), 1):
+            out[name] = blend(pairs, i / steps)
     return out, w, h
 
 def geometry():
@@ -153,15 +166,15 @@ def pose(hero, t):
     for when, attacker, victim, big in HITS:
         if hero == attacker:
             step = lunge(attacker, victim)
-            dx += facing * ramp(t, [(when - .22, 0), (when, step), (when + .15, step), (when + .4, 0)])
+            dx += facing * ramp(t, [(when - .3, 0), (when, step), (when + .15, step), (when + .4, 0)])
         if hero == victim and not big:
             dx -= facing * ramp(t, [(when, 0), (when + .12, 46), (when + .7, 0)])
             angle -= facing * ramp(t, [(when, 0), (when + .12, 6), (when + .5, 0)])
         if hero == victim and big:
             land = when + LANDING
             dx -= facing * ramp(t, [(when, 0), (when + .35, 80), (land, 95), (when + 1.1, 95), (when + 1.8, 0)])
-            dy -= ramp(t, [(when + .04, 0), (when + .36, 75), (land, 0)])
-            angle -= facing * ramp(t, [(when + .12, 0), (land - .06, 360), (land, 360)])
+            dy -= ramp(t, [(when, 0), (when + .33, 75), (land, 0)])
+            angle -= facing * ramp(t, [(when, 0), (land - .06, 360), (land, 360)])
     return round(dx, 1), round(dy, 1), round(angle, 1)
 
 def track(hero):
@@ -203,12 +216,12 @@ def burst(when, x, y, ink, ground=False):
 def schedule(attribute, value_at):
     """A looping discrete animation from a function of time, keeping only the changes."""
     keys, values = [], []
-    for i in range(int(LOOP / .02)):
-        t = round(i * .02, 2)
-        v = value_at(t)
+    for i in range(int(LOOP / .01)):
+        t = round(i * .01, 2)
+        v = str(value_at(t))
         if not values or v != values[-1]:
             keys.append(f'{t / LOOP:.4f}')
-            values.append(str(v))
+            values.append(v)
     return (f'<animate attributeName="{attribute}" values="{";".join(values)}" keyTimes="{";".join(keys)}" '
             f'dur="{LOOP}s" calcMode="discrete" repeatCount="indefinite"/>')
 

@@ -48,14 +48,6 @@ Signals, telemetry, their data and generators, and the Actions workflow were
 removed at the user's request. Banner regeneration is now local only. No API,
 token, commit or push is involved.
 
-The README no longer shows the stack. The Resolve and CapCut icons are still in
-`assets/icons` but unused:
-
-- DaVinci Resolve: https://cdn.simpleicons.org/davinciresolve (Simple Icons,
-  CC0 distribution; recolored and framed for readability).
-- CapCut: https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/capcut-icon.svg
-  (UXWing; retained original artwork). Brand marks belong to their owners.
-
 External README services: Shields badges.
 Core personal details are also readable text.
 Social destinations were read directly from https://github.com/elhabana:

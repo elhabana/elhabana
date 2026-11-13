@@ -10,8 +10,8 @@ python -m unittest discover -s scripts -p 'test_*.py'
 `visuals.py` owns the palette and `dots_d`, which draws particles as round-capped
 zero-length strokes inside one `<path>` per size and brightness, with relative
 moves: a fraction of the bytes of one `<circle>` per particle. `banner.py`
-generates everything: the dark/light header, the UN-CREDIBLES cover, a
-`-static.svg` copy of both without animation, and the project cards.
+generates everything: the dark/light header, the UN-CREDIBLES cover and the
+project cards.
 
 `avatar.py` reads the four supplied poses in `assets/avatar`
 with a small standard-library PNG decoder and turns them into a particle bust
@@ -44,9 +44,7 @@ particles use whole-unit coordinates (at most 0.25 px off on screen).
 
 Every overlay is hidden or settled by default, so static renderers show the
 finished banner with the whole terminal session and the heroes in their neutral
-pose; PNG exports do not preserve animation. The `-static.svg` copies are that
-same frame with every animation removed: the README serves them to visitors who
-ask for reduced motion (`prefers-reduced-motion: reduce` on each `<picture>`).
+pose; PNG exports do not preserve animation.
 
 `cards.py` draws the static project cards (Roller Hunter, FPS Online) in the
 header's terminal style. The README links each card to its project on The Rookies.

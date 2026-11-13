@@ -1,6 +1,5 @@
 """Generate an original editor-inspired header and compact project cover."""
 import random
-import re
 from html import escape
 
 from visuals import THEMES, text, rect, line, svg, save
@@ -110,15 +109,9 @@ def project(theme):
     b+=brawl(c)
     return svg(1180,300,theme,'UN-CREDIBLES: four particle heroes brawling; multiplayer superhero party game, in development',b)
 
-def still(content):
-    """The same SVG with every SMIL animation removed, for prefers-reduced-motion.
-    Every overlay is hidden or settled by default, so what is left is the finished frame."""
-    return re.sub(r'<(?:animate|animateTransform|set)\b[^>]*/>','',content)
-
 if __name__=='__main__':
     for theme in THEMES:
-        for name,content in ((f'banner-{theme}',render(theme)),(f'uncredibles-{theme}',project(theme))):
-            save(f'{name}.svg',content)
-            save(f'{name}-static.svg',still(content))
+        save(f'banner-{theme}.svg',render(theme))
+        save(f'uncredibles-{theme}.svg',project(theme))
     for name,content in cards.render_all().items():
         save(name,content)

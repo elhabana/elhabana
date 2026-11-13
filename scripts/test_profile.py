@@ -50,14 +50,6 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(out,sorted(points,key=lambda p:(p[1],p[0])))
         self.assertEqual(visuals.dots_d([(1.4,2.6),(3.6,-1.2)],whole=True),'M4-1h0m-3 4h0')
 
-    def test_reduced_motion_versions(self):
-        readme=(ASSETS.parent/'README.md').read_text(encoding='utf-8')
-        for theme in THEMES:
-            for name,content in ((f'banner-{theme}',banner.render(theme)),(f'uncredibles-{theme}',banner.project(theme))):
-                root=ET.fromstring(banner.still(content))
-                self.assertFalse([n for n in root.iter() if n.tag.split('}')[1] in ('animate','animateTransform','set')],name)
-                self.assertRegex(readme,r'media="\(prefers-reduced-motion: reduce\)[^"]*" srcset="assets/'+name+'-static.svg"')
-
     def test_cards_link_to_rookies(self):
         readme=(ASSETS.parent/'README.md').read_text(encoding='utf-8')
         for name in cards.render_all():

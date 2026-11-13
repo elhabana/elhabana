@@ -1,8 +1,6 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: light)" srcset="assets/banner-light-static.svg" />
-  <source media="(prefers-reduced-motion: reduce)" srcset="assets/banner-dark-static.svg" />
   <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="assets/banner-light.svg" />
   <img src="assets/banner-dark.svg" width="100%" alt="elhabana // interactive systems — Cristian Habana, Unity and C# game developer, 3D and audiovisual creator" />
@@ -39,24 +37,14 @@ I'm **Cristian Habana / elhabana**, a game developer working mainly with **Unity
 ## `> cat ./projects/un-credibles`
 
 <picture>
-  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: light)" srcset="assets/uncredibles-light-static.svg" />
-  <source media="(prefers-reduced-motion: reduce)" srcset="assets/uncredibles-dark-static.svg" />
   <source media="(prefers-color-scheme: dark)" srcset="assets/uncredibles-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="assets/uncredibles-light.svg" />
   <img src="assets/uncredibles-dark.svg" width="100%" alt="UN-CREDIBLES — four particle heroes brawling. Multiplayer superhero party game, in development." />
 </picture>
 
 <p align="center">
-<a href="https://www.therookies.co/projects/100977"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/card-roller-hunter-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="assets/card-roller-hunter-light.svg" />
-  <img src="assets/card-roller-hunter-dark.svg" width="49%" alt="Roller Hunter — third-person skating and combat with hordes and roguelike progression. View on The Rookies." />
-</picture></a>
-<a href="https://www.therookies.co/projects/96706"><picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/card-fps-online-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="assets/card-fps-online-light.svg" />
-  <img src="assets/card-fps-online-dark.svg" width="49%" alt="FPS Online — online combat prototype with synced players and hitscan shooting. View on The Rookies." />
-</picture></a>
+<a href="https://www.therookies.co/projects/100977"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/card-roller-hunter-dark.svg" /><source media="(prefers-color-scheme: light)" srcset="assets/card-roller-hunter-light.svg" /><img src="assets/card-roller-hunter-dark.svg" width="49%" alt="Roller Hunter — third-person skating and combat with hordes and roguelike progression. View on The Rookies." /></picture></a>
+<a href="https://www.therookies.co/projects/96706"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/card-fps-online-dark.svg" /><source media="(prefers-color-scheme: light)" srcset="assets/card-fps-online-light.svg" /><img src="assets/card-fps-online-dark.svg" width="49%" alt="FPS Online — online combat prototype with synced players and hitscan shooting. View on The Rookies." /></picture></a>
 </p>
 
 ---

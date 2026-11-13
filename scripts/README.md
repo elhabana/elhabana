@@ -50,7 +50,7 @@ pose; PNG exports do not preserve animation.
 title top left, a tag top right); the README stacks them under the cover and
 links each one to its project on The Rookies. `skater.py` (Roller Hunter): the
 hero of the trailer's opening comic skates in, hits a demon with a slingshot
-stone (it bursts into particles), kickflips over the second one hitting it from the air, lands in a puff of dust
+stone (it bursts into particles), jumps and hits the second one from the top of the jump, lands in a puff of dust
 and skates off; the demons respawn. `duel.py` (FPS Online): two soldiers behind
 cover trade hitscan shots with recoil, muzzle flash, tracers, casings and camera
 shake; a kill dissolves the victim into particles that converge again to respawn

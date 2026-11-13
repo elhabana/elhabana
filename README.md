@@ -1,6 +1,8 @@
 <div align="center">
 
 <picture>
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: light)" srcset="assets/banner-light-static.svg" />
+  <source media="(prefers-reduced-motion: reduce)" srcset="assets/banner-dark-static.svg" />
   <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="assets/banner-light.svg" />
   <img src="assets/banner-dark.svg" width="100%" alt="elhabana // interactive systems — Cristian Habana, Unity and C# game developer, 3D and audiovisual creator" />
@@ -9,6 +11,7 @@
 <br /><br />
 
 <a href="https://elhabana.github.io"><img src="https://img.shields.io/badge/Portfolio-151A22?style=for-the-badge&amp;logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRENFNUYwIiBzdHJva2Utd2lkdGg9IjIiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8%2BPHBhdGggZD0iTTIgMTJoMjBNMTIgMmMzIDMuMiAzIDE2LjggMCAyME0xMiAyYy0zIDMuMi0zIDE2LjggMCAyMCIvPjwvc3ZnPg%3D%3D&amp;labelColor=10141B" alt="Portfolio" /></a>
+<a href="https://www.linkedin.com/in/cristianhabana/"><img src="https://img.shields.io/badge/LinkedIn-151A22?style=for-the-badge&amp;logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0RDRTVGMCI%2BPHBhdGggZD0iTTQgOWgzLjV2MTFINHpNNS43NSAzLjVhMiAyIDAgMSAxIDAgNCAyIDIgMCAwIDEgMC00ek0xMCA5aDMuNHYxLjZjLjUtLjkgMS43LTEuOSAzLjUtMS45IDMuNiAwIDQuMyAyLjMgNC4zIDUuNFYyMGgtMy41di01LjJjMC0xLjMgMC0yLjktMS44LTIuOXMtMi4xIDEuNC0yLjEgMi44VjIwSDEweiIvPjwvc3ZnPg%3D%3D&amp;labelColor=10141B" alt="LinkedIn" /></a>
 <a href="https://www.youtube.com/@elhabana"><img src="https://img.shields.io/badge/YouTube-151A22?style=for-the-badge&amp;logo=youtube&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="YouTube" /></a>
 <a href="https://www.instagram.com/elhabana"><img src="https://img.shields.io/badge/Instagram-151A22?style=for-the-badge&amp;logo=instagram&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Instagram" /></a>
 <a href="https://www.twitch.tv/elhabanaaa"><img src="https://img.shields.io/badge/Twitch-151A22?style=for-the-badge&amp;logo=twitch&amp;logoColor=DCE5F0&amp;labelColor=10141B" alt="Twitch" /></a>
@@ -29,15 +32,32 @@ I'm **Cristian Habana / elhabana**, a game developer working mainly with **Unity
 - **Currently building UN-CREDIBLES**, a multiplayer superhero party game.
 - **Additional experience: GTA Roleplay / FiveM** — adapting server assets and visual content, with small script adjustments and occasional Lua.
 
+> **Open to** game-dev internships, junior roles and collaborations.
+
 ---
 
 ## `> cat ./projects/un-credibles`
 
 <picture>
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: light)" srcset="assets/uncredibles-light-static.svg" />
+  <source media="(prefers-reduced-motion: reduce)" srcset="assets/uncredibles-dark-static.svg" />
   <source media="(prefers-color-scheme: dark)" srcset="assets/uncredibles-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="assets/uncredibles-light.svg" />
   <img src="assets/uncredibles-dark.svg" width="100%" alt="UN-CREDIBLES — four particle heroes brawling. Multiplayer superhero party game, in development." />
 </picture>
+
+<p align="center">
+<a href="https://www.therookies.co/projects/100977"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/card-roller-hunter-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="assets/card-roller-hunter-light.svg" />
+  <img src="assets/card-roller-hunter-dark.svg" width="49%" alt="Roller Hunter — third-person skating and combat with hordes and roguelike progression. View on The Rookies." />
+</picture></a>
+<a href="https://www.therookies.co/projects/96706"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/card-fps-online-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="assets/card-fps-online-light.svg" />
+  <img src="assets/card-fps-online-dark.svg" width="49%" alt="FPS Online — online combat prototype with synced players and hitscan shooting. View on The Rookies." />
+</picture></a>
+</p>
 
 ---
 

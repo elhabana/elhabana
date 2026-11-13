@@ -6,7 +6,7 @@ import zlib
 from functools import lru_cache
 
 from boot import END
-from visuals import ASSETS, line, rect, text
+from visuals import ASSETS, dots_d, line, rect, text
 
 FRAMES = ('neutral', 'blink', 'talk', 'blink-talk')
 TIMES = (0, .20, .21, .34, .44, .45, .52, .54, .62, .73, .74, .88, .89, 1)
@@ -144,25 +144,33 @@ def reading(looks, index, speech):
         values.append(v)
     return ';'.join(map(str, values)), ';'.join(map(str, keys))
 
-def dot(x, y, looks, speech):
-    r, o = looks['neutral']
-    if looks['talk'] != looks['neutral']:
+def layer_timings(speech):
+    """Opacity of each face layer as (values, keyTimes, timing attributes); 1 = shown.
+    Swapping whole layers replaces one <animate> pair per particle with one per layer."""
+    begin, cycle, _ = speech
+    talk = f'dur="{cycle}s" begin="{begin}s" calcMode="discrete" repeatCount="indefinite"'
+    eyes = f'dur="18s" repeatCount="indefinite"'
+    shut = {frame: (1 if 'blink' in frame else 0,) for frame in FRAMES}
+    return {
         # mouth: reads along with the live terminal
-        begin, cycle, _ = speech
-        anims = ''.join(f'<animate attributeName="{attribute}" values="{values}" keyTimes="{times}" '
-                        f'dur="{cycle}s" begin="{begin}s" calcMode="discrete" repeatCount="indefinite"/>'
-                        for index, attribute in enumerate(('r', 'fill-opacity'))
-                        for values, times in [reading(looks, index, speech)])
-    elif looks['blink'] != looks['neutral']:
+        ('talk', 'neutral'): (*reading({'neutral': (1,), 'talk': (0,)}, 0, speech), talk),
+        ('talk', 'talk'): (*reading({'neutral': (0,), 'talk': (1,)}, 0, speech), talk),
         # eyes: keep blinking on their own 18-second loop
-        eyes = {frame: looks['blink'] if 'blink' in frame else looks['neutral'] for frame in FRAMES}
-        anims = ''.join(f'<animate attributeName="{attribute}" dur="18s" values="{values}" '
-                        f'keyTimes="{times}" repeatCount="indefinite"/>'
-                        for index, attribute in enumerate(('r', 'fill-opacity'))
-                        for values, times in [timeline(eyes, index)])
-    else:
-        return f'<circle cx="{x}" cy="{y}" r="{r}" fill-opacity="{o}"/>'
-    return f'<circle cx="{x}" cy="{y}" r="{r}" fill-opacity="{o}">{anims}</circle>'
+        ('blink', 'neutral'): (*timeline({f: (1 - v,) for f, (v,) in shut.items()}, 0), eyes),
+        ('blink', 'blink'): (*timeline(shut, 0), eyes),
+    }
+
+def kind(looks):
+    """'talk' for mouth particles, 'blink' for eye particles, None for the rest."""
+    return 'talk' if looks['talk'] != looks['neutral'] else 'blink' if looks['blink'] != looks['neutral'] else None
+
+def still_paths(still, colour):
+    """Static particles as round-capped zero-length strokes, one path per (radius, opacity):
+    the same dots as <circle r>, at a fraction of the bytes."""
+    return (f'<g stroke="{colour}" stroke-linecap="round" fill="none">'
+            + ''.join(f'<path stroke-width="{2 * r:g}" stroke-opacity="{o:g}" d="{dots_d(points)}"/>'
+                      for (r, o), points in sorted(still.items()))
+            + '</g>')
 
 def swarm(i, rnd):
     """Each swarm flies in from its own direction once the banner powers on."""
@@ -178,9 +186,29 @@ def swarm(i, rnd):
 def bust(c, speech):
     invert = int(c['bg'][1:3], 16) > 128
     rnd = random.Random(11)
-    groups = [[] for _ in range(SWARMS)]
+    timings = layer_timings(speech)
+    # per swarm: {layer: {(radius, opacity): [(x, y)]}}; layer None is the static body
+    still = [{} for _ in range(SWARMS)]
     for x, y, looks in particles(invert):
-        groups[rnd.randrange(SWARMS)].append(dot(x, y, looks, speech))
+        i, k = rnd.randrange(SWARMS), kind(looks)
+        for layer in ([(k, 'neutral'), (k, k)] if k else [None]):
+            r, o = looks[layer[1] if layer else 'neutral']
+            if r:
+                # opacity in .05 steps (invisible on the halftone) so each path holds more dots
+                still[i].setdefault(layer, {}).setdefault((r, round(o * 20) / 20), []).append((x, y))
+    groups = []
+    for layers in still:
+        out = []
+        for layer, dots in sorted(layers.items(), key=lambda item: item[0] or ()):
+            if layer is None:
+                out.append(still_paths(dots, c['accent']))
+                continue
+            values, times, timing = timings[layer]
+            # static renderers keep the base opacity: the neutral face
+            base = 1 if layer[1] == 'neutral' else 0
+            out.append(f'<g opacity="{base}"><animate attributeName="opacity" values="{values}" '
+                       f'keyTimes="{times}" {timing}/>{still_paths(dots, c["accent"])}</g>')
+        groups.append(out)
     parts = [f'<g fill="{c["accent"]}">']
     for i, dots in enumerate(groups):
         parts.append(swarm(i, rnd))

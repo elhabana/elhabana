@@ -28,3 +28,21 @@ def svg(w, h, theme, title, body):
 def save(name, content):
     ASSETS.mkdir(exist_ok=True)
     (ASSETS / name).write_text(content, encoding='utf-8')
+
+def tenths(v):
+    """Shortest SVG number for a value in tenths: 12 -> 1.2, -3 -> -.3, 40 -> 4."""
+    sign, v = ('-' if v < 0 else ''), abs(v)
+    whole, frac = divmod(v, 10)
+    return sign + (str(whole) if whole else '') + (f'.{frac}' if frac else '' if whole else '0')
+
+def dots_d(points, whole=False):
+    """Path data drawing each (x, y) as a zero-length segment, with relative moves.
+    Coordinates keep one decimal, or none with whole=True (for art drawn scaled down)."""
+    unit = 1 if whole else 10
+    out, px, py = [], 0, 0
+    for x, y in sorted(points, key=lambda p: (p[1], p[0])):
+        tx, ty = round(x * unit), round(y * unit)
+        dx, dy = (str(tx - px), str(ty - py)) if whole else (tenths(tx - px), tenths(ty - py))
+        out.append(f'{"m" if out else "M"}{dx}{"" if dy.startswith("-") else " "}{dy}h0')
+        px, py = tx, ty
+    return ''.join(out)

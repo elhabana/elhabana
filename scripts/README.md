@@ -7,14 +7,20 @@ python scripts/banner.py
 python -m unittest discover -s scripts -p 'test_*.py'
 ```
 
-`visuals.py` owns the palette. `banner.py` generates the dark/light header and
-UN-CREDIBLES cover. `avatar.py` reads the four supplied poses in `assets/avatar`
+`visuals.py` owns the palette and `dots_d`, which draws particles as round-capped
+zero-length strokes inside one `<path>` per size and brightness, with relative
+moves: a fraction of the bytes of one `<circle>` per particle. `banner.py`
+generates everything: the dark/light header, the UN-CREDIBLES cover, a
+`-static.svg` copy of both without animation, and the project cards.
+
+`avatar.py` reads the four supplied poses in `assets/avatar`
 with a small standard-library PNG decoder and turns them into a particle bust
 (about 5,000 dots, accent colour, brightness as halftone; inverted on the light
-theme). Every pose shares the same particle positions, so only the eye and mouth
-particles animate: the eyes blink on an 18-second SMIL loop and the mouth reads
-along with the live terminal, flapping while its letters are typed. After the
-boot screen the particles fly in as swarms and a few keep shimmering.
+theme). Every pose shares the same particle positions, so only the eyes and the
+mouth change. They are drawn twice, as an open and a closed layer, and one SMIL
+animation per layer swaps them: the eyes blink on an 18-second loop and the
+mouth reads along with the live terminal, flapping while its letters are typed.
+After the boot screen the particles fly in as swarms and a few keep shimmering.
 
 The header opens with `invaders.py`: an 8-bit Space Invaders round simulated in
 Python (player, shots, hits, bombs, score) and baked into SMIL. The player is hit,
@@ -33,9 +39,17 @@ pose to each drawing. Four identical heroes brawl in two duels on a 6-second
 loop: wind-up and punch; the victim staggers, or takes the hit, backflips, lands
 like a hero and walks back, while the puncher turns its back and takes a selfie
 with it flying behind (a flash at the top of the flip). Bursts of particles mark
-each impact and landing. Every overlay is hidden or settled by default, so static
-renderers show the finished banner with the whole terminal session.
-Static renderers show the neutral pose; PNG exports do not preserve animation.
+each impact and landing. The heroes are drawn at about half size, so their
+particles use whole-unit coordinates (at most 0.25 px off on screen).
+
+Every overlay is hidden or settled by default, so static renderers show the
+finished banner with the whole terminal session and the heroes in their neutral
+pose; PNG exports do not preserve animation. The `-static.svg` copies are that
+same frame with every animation removed: the README serves them to visitors who
+ask for reduced motion (`prefers-reduced-motion: reduce` on each `<picture>`).
+
+`cards.py` draws the static project cards (Roller Hunter, FPS Online) in the
+header's terminal style. The README links each card to its project on The Rookies.
 
 `system-view.html` is the interactive version. Open it in a browser and press
 **Activar sonido** to hear short synthesized chirps when the avatar opens its
@@ -44,14 +58,8 @@ GitHub profile README remains silent: GitHub renders its banner as an image and
 does not run the JavaScript needed for audio. To share sound publicly, host
 `system-view.html` together with `assets/avatar/` on a static web host.
 
-Signals, telemetry, their data and generators, and the Actions workflow were
-removed at the user's request. Banner regeneration is now local only. No API,
-token, commit or push is involved.
-
-External README services: Shields badges.
-Core personal details are also readable text.
-Social destinations were read directly from https://github.com/elhabana:
-YouTube @elhabana, Instagram elhabana, Twitch elhabanaaa, Kick elhabanaa.
+Regeneration is local only: no API, token or workflow is involved. The only
+external service the README uses is Shields, for the badges.
 
 The overall two-panel composition was studied from
 https://github.com/emmi-lili/emmi-lili. No personal content, portrait, branding

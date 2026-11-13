@@ -12,7 +12,7 @@ import math
 import random
 from functools import lru_cache
 
-from visuals import ASSETS
+from visuals import ASSETS, dots_d
 
 # head of each drawing as an ellipse (cx, cy, rx, ry) in its own pixels: heads pair
 # with heads during a morph, so the face keeps its shape
@@ -240,12 +240,13 @@ def schedule(attribute, value_at):
 
 def dots_path(dots):
     """Particles as round-capped zero-length strokes, one path per brightness level:
-    about a quarter of the bytes of one <circle> per particle."""
+    about a quarter of the bytes of one <circle> per particle. Whole-unit coordinates move
+    a dot by at most 0.25 px on screen, since the heroes are drawn at about half size."""
     groups = {}
     for x, y, r, o in dots:
-        groups.setdefault((round(r / .3) * .3, round(o / .15) * .15), []).append(f'M{x:g} {y:g}h0')
-    return ''.join(f'<path stroke-width="{2 * r:.2f}" stroke-opacity="{o:.2f}" d="{"".join(d)}"/>'
-                   for (r, o), d in sorted(groups.items()))
+        groups.setdefault((round(r / .3) * .3, round(o / .15) * .15), []).append((x, y))
+    return ''.join(f'<path stroke-width="{2 * r:.2f}" stroke-opacity="{o:.2f}" d="{dots_d(points, whole=True)}"/>'
+                   for (r, o), points in sorted(groups.items()))
 
 def brawl(c):
     sets, w, h = poses()

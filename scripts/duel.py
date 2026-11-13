@@ -8,9 +8,10 @@ from visuals import ASSETS, THEMES, line, text
 
 LOOP = 5.6
 DT = .05
-HEIGHT = 180
+HEIGHT = 214
 GROUND = 276
-FENCE_TOP = 210
+HIP_Y = GROUND - HEIGHT * .4
+FENCE_TOP = 224
 FENCE_HALF = 80
 PLAYERS = ((300, 1), (880, -1))
 # (trigger time, shooter, kill); arrival effects follow the bullet's flight.
@@ -19,21 +20,24 @@ FLIGHT = .18
 
 
 @lru_cache(maxsize=1)
+def soldier():
+    """Source geometry includes an explicit muzzle on the drawing's right."""
+    return json.loads((ASSETS / 'fpsonline' / 'particles.json').read_text(encoding='utf-8'))['soldier']
+
+
+@lru_cache(maxsize=1)
 def drawing():
-    """Load the left-facing soldier once, retaining bright and dim particles."""
-    aim = json.loads((ASSETS / 'fpsonline' / 'particles.json').read_text(encoding='utf-8'))['aim']
-    return [tuple(d) for d in aim['dots']]
+    """Full-body front view, retaining outline, wood and uniform brightness."""
+    return [tuple(d) for d in soldier()['dots']]
 
 
 def geometry():
     dots = drawing()
     top, bottom = min(d[1] for d in dots), max(d[1] for d in dots)
-    sy = HEIGHT / (bottom - top)
+    sy = round(HEIGHT / (bottom - top), 4)
     sx = sy
-    waist = [x for x, y, _, _ in dots if y >= bottom - 9]
-    anchor = sum(waist) / len(waist)
-    tip = min(d[0] for d in dots)
-    tip_y = sum(d[1] for d in dots if d[0] == tip) / sum(d[0] == tip for d in dots)
+    anchor = soldier()['width'] / 2
+    tip, tip_y = soldier()['muzzle']
     return sx, sy, anchor, bottom, tip, tip_y
 
 
@@ -55,8 +59,8 @@ def pose(player, t):
     for when, shooter, kill in SHOTS:
         if shooter == player:
             kick = ramp(t, [(when, 0), (when + .03, 1), (when + .15, 0)])
-            dx -= facing * 6 * kick
-            angle -= facing * 4 * kick
+            dx -= facing * 4 * kick
+            angle -= facing * 2 * kick
         elif kill:
             death = round(when + FLIGHT, 2)
             hit = ramp(t, [(death, 0), (death + .10, 1),
@@ -65,7 +69,7 @@ def pose(player, t):
             angle -= facing * 8 * hit
         else:
             # Move the entire drawing below the floor clip, even through translucent mesh.
-            duck = GROUND - (270 - HEIGHT) + 4
+            duck = HEIGHT + 10
             dy += ramp(t, [(when - .20, 0), (when - .06, duck),
                            (when + FLIGHT + .06, duck),
                            (when + FLIGHT + .10, duck + 4), (when + FLIGHT + .28, 0)])
@@ -83,22 +87,22 @@ def upper(player, t):
 
 
 def shoulder(player):
-    return PLAYERS[player][0], 270 - HEIGHT * .72
+    return PLAYERS[player][0], GROUND - HEIGHT * .72
 
 
 def positioned(player, px, py, t):
     """Apply the same shoulder, recoil and stagger transforms used by the SVG."""
     sx, sy, anchor, bottom, _, _ = geometry()
     x, facing = PLAYERS[player]
-    xx, yy = x - facing * sx * (px - anchor), 270 + sy * (py - bottom)
+    xx, yy = x + facing * sx * (px - anchor), GROUND + sy * (py - bottom)
     if py < bottom - HEIGHT / sy * .34:
         hx, hy = shoulder(player)
-        a = math.radians(upper(player, t))
+        a = math.radians(round(upper(player, t), 1))
         xx, yy = hx + (xx - hx) * math.cos(a) - (yy - hy) * math.sin(a), hy + (xx - hx) * math.sin(a) + (yy - hy) * math.cos(a)
     dx, dy, angle = pose(player, t)
     a = math.radians(angle)
-    return (x + (xx - x) * math.cos(a) - (yy - 224) * math.sin(a) + dx,
-            224 + (xx - x) * math.sin(a) + (yy - 224) * math.cos(a) + dy)
+    return (x + (xx - x) * math.cos(a) - (yy - HIP_Y) * math.sin(a) + dx,
+            HIP_Y + (xx - x) * math.sin(a) + (yy - HIP_Y) * math.cos(a) + dy)
 
 
 def animate(attribute, events, transform=False):
@@ -121,12 +125,13 @@ def track(player):
     times = sorted({round(i * DT, 2) for i in range(round(LOOP / DT) + 1)} |
                    {round(when + offset, 2) for when, _, _ in SHOTS
                     for offset in (0, .03, .10, .15, .25, FLIGHT, FLIGHT + .10,
-                                   FLIGHT + .28, FLIGHT + .65, FLIGHT + .80)})
+                                   FLIGHT + .28, FLIGHT + .65, FLIGHT + .80,
+                                   -.20, -.06, FLIGHT + .06)})
     poses = [(t, pose(player, t)) for t in times]
     x = PLAYERS[player][0]
     hx, hy = shoulder(player)
     return (animate('translate', [(t, f'{dx:g} {dy:g}') for t, (dx, dy, _) in poses], True),
-            animate('rotate', [(t, f'{a:g} {x} 224') for t, (_, _, a) in poses], True),
+            animate('rotate', [(t, f'{a:g} {x} {HIP_Y:g}') for t, (_, _, a) in poses], True),
             animate('rotate', [(t, f'{upper(player, t):.1f} {hx} {hy:g}') for t in times], True))
 
 
@@ -145,9 +150,9 @@ def dissolve(player, death, c):
     """36 body samples scatter ballistically, then retrace their paths to respawn."""
     sx, sy, anchor, bottom, _, _ = geometry()
     x, facing = PLAYERS[player]
-    body = [d for d in drawing() if d[0] >= anchor - 35]
+    body = drawing()
     samples = [body[i * len(body) // 36] for i in range(36)]
-    points = [(x - facing * sx * (px - anchor), 270 + sy * (py - bottom))
+    points = [(x + facing * sx * (px - anchor), GROUND + sy * (py - bottom))
               for px, py, _, _ in samples]
     staggered = [positioned(player, px, py, death + .10) for px, py, _, _ in samples]
 
@@ -198,7 +203,7 @@ def scene(c) -> list[str]:
     parts.append(line(40, GROUND + 2, 1140, GROUND + 2, c['line'], 'stroke-dasharray="2 6"'))
     for player, (x, facing) in enumerate(PLAYERS):
         move, turn, aim = track(player)
-        place = (f'translate({x} 270) scale({-facing * sx:.4f} {sy:.4f}) '
+        place = (f'translate({x} {GROUND}) scale({facing * sx:.4f} {sy:.4f}) '
                  f'translate({-anchor:.2f} {-bottom})')
         flash = schedule('stroke', lambda t: c['text'] if any(
             kill and shooter != player and round(when + FLIGHT, 2) <= t < round(when + FLIGHT + .10, 2)
@@ -210,15 +215,18 @@ def scene(c) -> list[str]:
                      f'stroke-linecap="round" fill="none">{flash}'
                      f'<g>{visibility}<use href="#duel-lower" transform="{place}"/>'
                      f'<g>{aim}<use href="#duel-upper" transform="{place}"/></g></g>'
-                     '</g></g>' + text(x, 78, f'P{player + 1}', c['muted'], 11, 'middle', 700) + '</g></g>')
+                     '</g></g>' + text(x - facing * 70, 78, f'P{player + 1}', c['muted'], 11, 'middle', 700) + '</g></g>')
     # Magazine particles are drawn before the fences, so they fall behind the mesh.
     for when, shooter, _ in SHOTS:
         x, facing = PLAYERS[shooter]
         start = when + .10
+        # The magazine falls from the rifle, just inboard of the tracked muzzle.
+        mx, my = positioned(shooter, tip - 12, tip_y + 4, start)
+        mx, my = round(mx, 1), round(my, 1)
         drop = [(0, '0 0'), (start, '0 0'), (start + .12, f'{-facing * 4} 12'),
-                (start + .30, f'{-facing * 8} {GROUND - 198}'),
-                (LOOP, f'{-facing * 8} {GROUND - 198}')]
-        parts.append(f'<path class="duel-magazine" d="M{x + facing * 16} 198l1 3" '
+                (start + .30, f'{-facing * 8} {GROUND - my:.1f}'),
+                (LOOP, f'{-facing * 8} {GROUND - my:.1f}')]
+        parts.append(f'<path class="duel-magazine" d="M{mx} {my}l1 3" '
                      f'stroke="{c["accent"]}" stroke-width="2" opacity="0">'
                      f'{pulse(start, .32)}{animate("translate", drop, True)}</path>')
     # Dissolution stays behind cover, just like the waist and the ducked drawing.
@@ -258,15 +266,18 @@ def scene(c) -> list[str]:
         x, facing = PLAYERS[shooter]
         mx, my = (round(value, 1) for value in positioned(shooter, tip, tip_y, when))
         victim = 1 - shooter
-        tx = PLAYERS[victim][0] + facing * 5
-        ty = my if kill else FENCE_TOP
+        arrival = round(when + FLIGHT, 2)
+        if kill:
+            tx, ty = (round(value, 1) for value in positioned(
+                victim, anchor, bottom - HEIGHT / sy * .63, arrival))
+        else:
+            tx, ty = PLAYERS[victim][0] + facing * 5, FENCE_TOP
         rays = ''.join(f'M{mx + math.cos(i * math.pi / 4) * 4:.1f} '
                        f'{my + math.sin(i * math.pi / 4) * 4:.1f}'
                        f'l{math.cos(i * math.pi / 4) * 14:.1f} '
                        f'{math.sin(i * math.pi / 4) * 14:.1f}' for i in range(8))
         parts.append(f'<path d="{rays}" fill="none" stroke="{c["text"]}" '
                      f'stroke-width="2.5" opacity="0">{pulse(when, .08)}</path>')
-        arrival = round(when + FLIGHT, 2)
         flight = animate('translate', [(0, f'{mx} {my}'), (when, f'{mx} {my}'),
                                        (arrival, f'{tx} {ty}'), (LOOP, f'{tx} {ty}')], True)
         visible = schedule('opacity', lambda t: int(when <= t < arrival), loop=LOOP)
@@ -305,6 +316,7 @@ def scene(c) -> list[str]:
 
 if __name__ == '__main__':
     # Local self-check only: no files are written or generators invoked.
+    from cards import CARDS, card
     from xml.etree import ElementTree as ET
 
     assert len(drawing()) >= 36
@@ -316,8 +328,8 @@ if __name__ == '__main__':
         assert abs(upper(player, 0) - upper(player, LOOP)) < 1e-9, 'Shoulder sway must loop'
     assert upper(0, 0) != upper(1, 0), 'Soldiers must aim independently'
     for when, shooter, kill in SHOTS:
-        assert pose(shooter, when + .03)[0] == -PLAYERS[shooter][1] * 6
-        assert abs(pose(shooter, when + .03)[2]) == 4
+        assert pose(shooter, when + .03)[0] == -PLAYERS[shooter][1] * 4
+        assert abs(pose(shooter, when + .03)[2]) == 2
         peak = when + .10
         sway = 1.5 * math.sin(2 * math.pi * (peak / LOOP * (2 + shooter) + shooter * .25))
         assert abs(upper(shooter, peak) - sway - PLAYERS[shooter][1] * 6) < 1e-9
@@ -328,8 +340,7 @@ if __name__ == '__main__':
             assert hit[0] == -PLAYERS[victim][1] * 10
             assert hit[2] == -PLAYERS[victim][1] * 8
             particles = ET.fromstring(dissolve(victim, death, THEMES['dark']))
-            body = [d for d in drawing() if d[0] >= geometry()[2] - 35]
-            px, py = positioned(victim, *body[0][:2], death + .10)
+            px, py = positioned(victim, *drawing()[0][:2], death + .10)
             assert particles.get('d').startswith(f'M{px:.0f} {min(GROUND, py):.0f}h0'), 'Dissolve must start in the staggered pose'
             assert alive(1 - shooter, death + .20) == 0
             assert 0 < alive(1 - shooter, death + .95) < 1
@@ -337,19 +348,24 @@ if __name__ == '__main__':
         else:
             for i in range(7):
                 t = when + FLIGHT - .03 + i * .01
-                assert 270 - HEIGHT + pose(1 - shooter, t)[1] > GROUND, 'Duck must fully hide the soldier'
+                assert all(positioned(1 - shooter, px, py, t)[1] - r * geometry()[1] > GROUND
+                           for px, py, r, _ in drawing()), 'Duck must fully hide every particle'
     sx, sy, anchor, bottom, tip, _ = geometry()
     assert sx == sy, 'Soldiers must retain their original proportions'
-    assert PLAYERS[0][0] + sx * (anchor - tip) < PLAYERS[1][0] - sx * (anchor - tip), 'Pistols overlap'
+    assert 210 <= sy * (max(d[1] for d in drawing()) - min(d[1] for d in drawing())) <= 220
+    assert tip > anchor, 'The source muzzle must face right'
+    assert PLAYERS[0][0] + sx * (tip - anchor) < PLAYERS[1][0] - sx * (tip - anchor), 'Rifles overlap'
     for x, facing in PLAYERS:
         for px, py, _, _ in drawing():
-            assert 40 <= x - facing * sx * (px - anchor) <= 1140
-            assert 56 <= 270 + sy * (py - bottom) <= 292
-    for theme in THEMES.values():
+            assert 40 <= x + facing * sx * (px - anchor) <= 1140
+            assert 56 <= GROUND + sy * (py - bottom) <= GROUND
+    for theme_name, theme in THEMES.items():
         content = ''.join(scene(theme))
         root = ET.fromstring(f'<svg>{content}</svg>')
-        size = len(content.encode('utf-8'))
-        assert size < 48_000, f'Scene exceeds 48 KB: {size} bytes'
+        # Match cards.py's complete FPS card, including its title and SVG wrapper.
+        slug, title, tags, _, about = CARDS[1]
+        card_size = len(card(theme_name, slug, title, tags, scene, about).encode('utf-8'))
+        assert card_size < 75_000, f'Card exceeds 75 KB: {card_size} bytes'
         bounds = root.find('.//clipPath[@id="duel-bounds"]/rect')
         assert bounds.attrib == dict(x='40', y='56', width='1100', height='236')
         floor = root.find('.//clipPath[@id="duel-floor"]/rect')
@@ -366,6 +382,9 @@ if __name__ == '__main__':
         assert len(root.findall('.//path[@class="duel-magazine"]')) == len(SHOTS)
         for use in root.findall('.//use'):
             assert use.get('transform').startswith('translate('), 'Static soldiers must stand and aim'
+        for player, (_, facing) in enumerate(PLAYERS):
+            assert all(f'scale({facing * sx:.4f} {sy:.4f})' in use.get('transform')
+                       for use in root.findall('.//use')[player * 2:player * 2 + 2]), 'Soldiers must face each other'
         for magazine in root.findall('.//path[@class="duel-magazine"]'):
             assert magazine.get('opacity') == '0'
             assert list(root.find('./g/g')).index(magazine) < next(
@@ -398,6 +417,12 @@ if __name__ == '__main__':
             assert abs(keys[2] * LOOP - when - FLIGHT) < .001
             positions = motion.get('values').split(';')
             assert positions[0] == positions[1] and positions[2] == positions[3]
+            muzzle = tuple(round(v, 1) for v in positioned(shooter, *soldier()['muzzle'], when))
+            assert tuple(map(float, positions[1].split())) == muzzle, 'Bullet must start at the moving muzzle'
+            if kill:
+                chest = tuple(round(v, 1) for v in positioned(
+                    1 - shooter, anchor, bottom - HEIGHT / sy * .63, round(when + FLIGHT, 2)))
+                assert tuple(map(float, positions[2].split())) == chest, 'Bullet must hit the chest'
             if not kill:
                 tx, ty = map(float, positions[2].split())
                 assert abs(tx - PLAYERS[1 - shooter][0]) < FENCE_HALF and ty == FENCE_TOP
@@ -418,4 +443,4 @@ if __name__ == '__main__':
         for effect in root.findall('.//path') + root.findall('.//line'):
             if effect.find('animate') is not None:
                 assert effect.get('opacity') == '0', 'Effects must be hidden without SMIL'
-        print(f'Duel checks passed: {size:,} bytes.')
+        print(f'Duel checks passed: {card_size:,} bytes per card.')

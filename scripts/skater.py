@@ -28,6 +28,11 @@ AIM = .35                       # seconds spent drawing the band back before eac
 STRIDE = .6                     # seconds per pair of skating pushes
 HIP = .67                       # the legs swing from just under the shorts
 ANKLE = .82                     # and the skates this far: they stay flat on the ground
+# the arms, in drawing pixels: the slingshot arm (fist at the chest) and the free arm hanging
+# down the other side; each swings around its shoulder
+ARMS = (([(0, 82), (48, 82), (56, 108), (76, 112), (76, 172), (0, 172)], (50, 92)),
+        ([(118, 82), (162, 82), (162, 206), (118, 206)], (128, 92)))
+SINK = 5                        # px the body drops on each push (the centre of gravity)
 FLIGHT = .22                    # seconds a slingshot stone takes to reach its demon
 RESPAWN = 5.2
 STATIC_X = 330                  # where the hero stands for static renderers
@@ -48,13 +53,55 @@ def hero(t):
     """x, dy (up is negative) and angle of the hero at t."""
     start, land, height = JUMP
     x = ramp(t, PATH)
-    dy, angle = 2 * math.sin(2 * math.pi * t / STRIDE), 5   # stride bob, leaning into the skate
+    dy, angle = cog(t), 5                                   # down on each push, leaning into the skate
     angle += 3 * math.sin(2 * math.pi * t / STRIDE) * (1 if body()[3][0][0] > 0 else -1)
     if start <= t <= land:
         u = (t - start) / (land - start)
         dy = -4 * height * u * (1 - u)
         angle = 5 + 6 * math.sin(math.pi * u)               # a slight forward tilt in the air
     return x, dy, angle
+
+def cog(t):
+    """How far the body drops: lowest at each push, up again as the legs cross (twice per
+    stride, one push per leg). Nothing in the air."""
+    return 0 if jumping(t) else SINK * math.sin(2 * math.pi * t / STRIDE) ** 2
+
+def inside(x, y, poly):
+    hit = False
+    for (x1, y1), (x2, y2) in zip(poly, poly[1:] + poly[:1]):
+        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+            hit = not hit
+    return hit
+
+@lru_cache(maxsize=None)
+def arms():
+    """The torso without its arms, each arm's particles and each shoulder in local coordinates."""
+    top = body()[0]
+    dots, w, h = drawing('go')
+    s = scale('go')
+    local = lambda x, y: (round(-s * (x - w / 2), 1), round(GROUND + s * (y - h), 1))
+    sets = [[d for d in top if inside(d[0], d[1], poly)] for poly, _ in ARMS]
+    torso = [d for d in top if not any(inside(d[0], d[1], poly) for poly, _ in ARMS)]
+    return torso, sets, [local(*shoulder) for _, shoulder in ARMS]
+
+def arm(i, t):
+    """Swing of arm i (0 = slingshot, 1 = free) around its shoulder, in degrees; positive turns
+    the hand to the hero's left. Each arm swings across the body as the leg on its side pushes
+    out, and back out as that leg crosses: the push of the arms. The slingshot arm stays still
+    while it aims."""
+    shoulder_x = arms()[2][i][0]
+    side = next(j for j in (0, 1) if (body()[3][j][0] < 0) == (shoulder_x < 0))
+    wave = stride(side, t)
+    across = 1 if shoulder_x > 0 else -1          # positive swings a right-hand arm across
+    swing = across * (22 * max(0, wave) - 14 * max(0, -wave))
+    if i == 0:
+        # the slingshot arm settles over .12 s before it aims and stays still until the stone flies
+        quiet = min(min(abs(t - (when - AIM - .12)), abs(t - (when + .15))) if not (when - AIM - .12 <= t <= when + .15) else 0
+                    for when, _ in SHOTS)
+        return swing * .45 * min(1, quiet / .12)
+    # in the air the free arm goes out for balance; jumping() eases in and out, so does the arm
+    j = jumping(t)
+    return swing * (1 - min(1, 3 * j)) + (28 if shoulder_x < 0 else -28) * j
 
 def squash(t):
     """Vertical scale around the feet: crouch before take-off, stretch leaving the ground,
@@ -162,7 +209,10 @@ def scene(c):
     keys = ';'.join(k(t) for t in times)
     track = [hero(t) for t in times]
     top, legs, feet, hips, ankles = body()
-    parts = [f'<defs><g id="rh-top">{dots_path(top)}</g>'
+    torso, arm_sets, shoulders = arms()
+    parts = [f'<defs><g id="rh-top">{dots_path(torso)}</g>'
+             + ''.join(f'<g id="rh-arm{i}">{dots_path(arm_sets[i])}</g>' for i in (0, 1))
+             + ''
              + ''.join(f'<g id="rh-leg{i}">{dots_path(legs[i])}</g><g id="rh-foot{i}">{dots_path(feet[i])}</g>' for i in (0, 1))
              + f'<g id="rh-demon">{dots_path(drawing("demon")[0])}</g></defs>',
              f'<line x1="40" y1="{GROUND + 2}" x2="1140" y2="{GROUND + 2}" stroke="{c["line"]}" stroke-dasharray="2 6"/>']
@@ -205,7 +255,8 @@ def scene(c):
             dx = (ax - hx) * math.cos(r) - (ay - hy) * math.sin(r) + hx - ax
             dy = (ax - hx) * math.sin(r) + (ay - hy) * math.cos(r) + hy - ay
             # the leg's tuck is applied inside its rotation, so the skate's must be rotated too
-            return f'{dx - lift * math.sin(r):.1f} {dy + lift * math.cos(r):.1f}'
+            # ...and stays on the ground while the body sinks on each push
+            return f'{dx - lift * math.sin(r):.1f} {dy + lift * math.cos(r) - cog(t):.1f}'
         step = ';'.join(follow(t) for t in times)
         limb_defs += (f'<g id="rh-stride{side}"><animateTransform attributeName="transform" type="translate" values="{shift}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
                   f'<g><animateTransform attributeName="transform" type="rotate" values="{turn}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
@@ -220,6 +271,12 @@ def scene(c):
             shown = schedule('opacity', lambda t, side=side, front=front: int(
                 int(not jumping(t) and stride(side, t) < 0) == front), LOOP)
             limbs += f'<use href="#rh-stride{side}" opacity="{1 - front}">{shown}</use>'
+    swings = ''
+    for i in (0, 1):
+        sx, sy = shoulders[i]
+        turn = ';'.join(f'{arm(i, t):.1f} {sx} {sy}' for t in times)
+        swings += (f'<g><animateTransform attributeName="transform" type="rotate" values="{turn}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
+                   f'<use href="#rh-arm{i}" transform="translate(0 {GROUND}) {place("go", mirror=True)}"/></g>')
     # aiming: the band of the slingshot is drawn back to the pouch, then snaps forward on release
     hx, hy = hand()
     pull, seen = [(0, hx)], [(0, 0)]
@@ -242,7 +299,7 @@ def scene(c):
                  f'<g transform="translate(0 {GROUND})"><g>'
                  f'<animateTransform attributeName="transform" type="scale" values="{squashes}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
                  f'<g transform="translate(0 {-GROUND})"><g stroke="{ink}" stroke-linecap="round" fill="none">'
-                 f'<use href="#rh-top" transform="translate(0 {GROUND}) {place("go", mirror=True)}"/>{limbs}</g>{band}</g></g></g></g>'
+                 f'{limbs}<use href="#rh-top" transform="translate(0 {GROUND}) {place("go", mirror=True)}"/>{swings}</g>{band}</g></g></g></g>'
                  # the label follows the hero but never spins with it
                  f'<text x="0" y="{GROUND - HERO_H - 12}" fill="{c["muted"]}" font-size="12" font-weight="700" text-anchor="middle">P1</text>'
                  '</g>')
@@ -304,7 +361,7 @@ if __name__ == '__main__':
     slug, title, tags, _, about = CARDS[0]
     for theme in THEMES:
         content = card(theme, slug, title, tags, scene, about)
-        assert len(content.encode('utf-8')) < 110_000, 'Card exceeds 110 KB'
+        assert len(content.encode('utf-8')) < 120_000, 'Card exceeds 120 KB'
         root = ET.fromstring(content)
         for node in root.iter():
             if 'keyTimes' in node.attrib:

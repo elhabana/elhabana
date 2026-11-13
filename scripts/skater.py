@@ -26,7 +26,8 @@ DEMONS = (600, 860)             # x of each demon
 SHOTS = ((1.4, 0), (2.95, 1))   # (release, demon): the second one from the top of the jump
 AIM = .35                       # seconds spent drawing the band back before each release
 STRIDE = .6                     # seconds per pair of skating pushes
-HIP = .56                       # the legs start this far down the drawing
+HIP = .67                       # the legs swing from just under the shorts
+ANKLE = .82                     # and the skates this far: they stay flat on the ground
 FLIGHT = .22                    # seconds a slingshot stone takes to reach its demon
 RESPAWN = 5.2
 STATIC_X = 330                  # where the hero stands for static renderers
@@ -69,7 +70,7 @@ def leg(side, t):
     """Angle of one leg around its hip and how far it is tucked up. On the ground the legs
     push outwards in turn; in the
     air both knees come up and out."""
-    out = 1 if body()[2][side][0] < 0 else -1      # turning clockwise swings a foot to the left
+    out = 1 if body()[3][side][0] < 0 else -1      # turning clockwise swings a foot to the left
     if jumping(t):
         return out * 12 * jumping(t), -16 * jumping(t)
     push = math.sin(2 * math.pi * t / STRIDE + (0 if side == 0 else math.pi))
@@ -77,18 +78,20 @@ def leg(side, t):
 
 @lru_cache(maxsize=None)
 def body():
-    """The hero split into torso and two legs, each its own particle set, plus each hip in
-    the hero's local coordinates (feet at 0, GROUND; mirrored like the drawing)."""
+    """The hero split into torso, two legs and two skates, each its own particle set, plus
+    each hip and ankle in the hero's local coordinates (feet at 0, GROUND; mirrored like
+    the drawing)."""
     dots, w, h = drawing('go')
-    s, hip = scale('go'), h * HIP
+    s, hip, ankle = scale('go'), h * HIP, h * ANKLE
     local = lambda x, y: (round(-s * (x - w / 2), 1), round(GROUND + s * (y - h), 1))
+    side_of = lambda d: 0 if d[0] < w / 2 else 1
     top = [d for d in dots if d[1] < hip]
-    legs = [[d for d in dots if d[1] >= hip and (d[0] < w / 2) == (side == 0)] for side in (0, 1)]
-    hips = []
-    for part in legs:
-        near = [d[0] for d in part if d[1] < hip + 20] or [d[0] for d in part]
-        hips.append(local(sum(near) / len(near), hip))
-    return top, legs, hips
+    legs = [[d for d in dots if hip <= d[1] < ankle and side_of(d) == side] for side in (0, 1)]
+    feet = [[d for d in dots if d[1] >= ankle and side_of(d) == side] for side in (0, 1)]
+    mean_x = lambda part, y0, y1: (lambda xs: sum(xs) / len(xs))([d[0] for d in part if y0 <= d[1] < y1] or [d[0] for d in part])
+    hips = [local(mean_x(legs[side], hip, hip + 20), hip) for side in (0, 1)]
+    ankles = [local(mean_x(legs[side], ankle - 20, ankle), ankle) for side in (0, 1)]
+    return top, legs, feet, hips, ankles
 
 def hand():
     """The slingshot hand in the hero's local coordinates (the drawing's left hand, mirrored)."""
@@ -147,9 +150,10 @@ def scene(c):
     times = [round(i * DT, 2) for i in range(int(LOOP / DT) + 1)]
     keys = ';'.join(k(t) for t in times)
     track = [hero(t) for t in times]
-    top, legs, hips = body()
-    parts = [f'<defs><g id="rh-top">{dots_path(top)}</g><g id="rh-leg0">{dots_path(legs[0])}</g>'
-             f'<g id="rh-leg1">{dots_path(legs[1])}</g><g id="rh-demon">{dots_path(drawing("demon")[0])}</g></defs>',
+    top, legs, feet, hips, ankles = body()
+    parts = [f'<defs><g id="rh-top">{dots_path(top)}</g>'
+             + ''.join(f'<g id="rh-leg{i}">{dots_path(legs[i])}</g><g id="rh-foot{i}">{dots_path(feet[i])}</g>' for i in (0, 1))
+             + f'<g id="rh-demon">{dots_path(drawing("demon")[0])}</g></defs>',
              f'<line x1="40" y1="{GROUND + 2}" x2="1140" y2="{GROUND + 2}" stroke="{c["line"]}" stroke-dasharray="2 6"/>']
     # demons: idle bob, hit flash, knocked back, gone until the respawn (which fades them in)
     for i, x in enumerate(DEMONS):
@@ -179,9 +183,21 @@ def scene(c):
         hx, hy = hips[side]
         turn = ';'.join(f'{leg(side, t)[0]:.1f} {hx} {hy}' for t in times)
         tuck = ';'.join(f'0 {leg(side, t)[1]:.1f}' for t in times)
+        # the skate follows the ankle as the leg swings but stays flat on the ground
+        ax, ay = ankles[side]
+        def follow(t, side=side, hx=hx, hy=hy, ax=ax, ay=ay):
+            a, lift = leg(side, t)
+            r = math.radians(a)
+            dx = (ax - hx) * math.cos(r) - (ay - hy) * math.sin(r) + hx - ax
+            dy = (ax - hx) * math.sin(r) + (ay - hy) * math.cos(r) + hy - ay
+            # the leg's tuck is applied inside its rotation, so the skate's must be rotated too
+            return f'{dx - lift * math.sin(r):.1f} {dy + lift * math.cos(r):.1f}'
+        step = ';'.join(follow(t) for t in times)
         limbs += (f'<g><animateTransform attributeName="transform" type="rotate" values="{turn}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
                   f'<g><animateTransform attributeName="transform" type="translate" values="{tuck}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
-                  f'<use href="#rh-leg{side}" transform="translate(0 {GROUND}) {place("go", mirror=True)}"/></g></g>')
+                  f'<use href="#rh-leg{side}" transform="translate(0 {GROUND}) {place("go", mirror=True)}"/></g></g>'
+                  f'<g><animateTransform attributeName="transform" type="translate" values="{step}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
+                  f'<use href="#rh-foot{side}" transform="translate(0 {GROUND}) {place("go", mirror=True)}"/></g>')
     # aiming: the band of the slingshot is drawn back to the pouch, then snaps forward on release
     hx, hy = hand()
     pull, seen = [(0, hx)], [(0, 0)]

@@ -48,21 +48,57 @@ def ramp(t, points):
 
 
 def pose(player, t):
-    """Breathing, recoil and the one successful duck, in card coordinates."""
+    """Breathing, recoil, fatal stagger and the successful duck, in card coordinates."""
     facing = PLAYERS[player][1]
     dx = angle = 0
-    dy = 1.4 * math.sin(2 * math.pi * (t / LOOP * 5 + player * .5))
+    dy = 1.4 * math.sin(2 * math.pi * (t / LOOP * (5 + player) + player * .25))
     for when, shooter, kill in SHOTS:
         if shooter == player:
             kick = ramp(t, [(when, 0), (when + .03, 1), (when + .15, 0)])
             dx -= facing * 6 * kick
             angle -= facing * 4 * kick
-        elif not kill:
+        elif kill:
+            death = round(when + FLIGHT, 2)
+            hit = ramp(t, [(death, 0), (death + .10, 1),
+                           (death + .65, 1), (death + .80, 0)])
+            dx -= facing * 10 * hit
+            angle -= facing * 8 * hit
+        else:
             # Move the entire drawing below the floor clip, even through translucent mesh.
             duck = GROUND - (270 - HEIGHT) + 4
             dy += ramp(t, [(when - .20, 0), (when - .06, duck),
-                           (when + FLIGHT + .06, duck), (when + FLIGHT + .28, 0)])
+                           (when + FLIGHT + .06, duck),
+                           (when + FLIGHT + .10, duck + 4), (when + FLIGHT + .28, 0)])
     return round(dx, 1), round(dy, 1), round(angle, 1)
+
+
+def upper(player, t):
+    """Independent shoulder sway and a brief muzzle dip after each shot."""
+    facing = PLAYERS[player][1]
+    angle = 1.5 * math.sin(2 * math.pi * (t / LOOP * (2 + player) + player * .25))
+    for when, shooter, _ in SHOTS:
+        if shooter == player:
+            angle += facing * 6 * ramp(t, [(when, 0), (when + .10, 1), (when + .25, 0)])
+    return angle
+
+
+def shoulder(player):
+    return PLAYERS[player][0], 270 - HEIGHT * .72
+
+
+def positioned(player, px, py, t):
+    """Apply the same shoulder, recoil and stagger transforms used by the SVG."""
+    sx, sy, anchor, bottom, _, _ = geometry()
+    x, facing = PLAYERS[player]
+    xx, yy = x - facing * sx * (px - anchor), 270 + sy * (py - bottom)
+    if py < bottom - HEIGHT / sy * .34:
+        hx, hy = shoulder(player)
+        a = math.radians(upper(player, t))
+        xx, yy = hx + (xx - hx) * math.cos(a) - (yy - hy) * math.sin(a), hy + (xx - hx) * math.sin(a) + (yy - hy) * math.cos(a)
+    dx, dy, angle = pose(player, t)
+    a = math.radians(angle)
+    return (x + (xx - x) * math.cos(a) - (yy - 224) * math.sin(a) + dx,
+            224 + (xx - x) * math.sin(a) + (yy - 224) * math.cos(a) + dy)
 
 
 def animate(attribute, events, transform=False):
@@ -84,11 +120,14 @@ def pulse(when, duration):
 def track(player):
     times = sorted({round(i * DT, 2) for i in range(round(LOOP / DT) + 1)} |
                    {round(when + offset, 2) for when, _, _ in SHOTS
-                    for offset in (0, .03, .15)})
+                    for offset in (0, .03, .10, .15, .25, FLIGHT, FLIGHT + .10,
+                                   FLIGHT + .28, FLIGHT + .65, FLIGHT + .80)})
     poses = [(t, pose(player, t)) for t in times]
     x = PLAYERS[player][0]
+    hx, hy = shoulder(player)
     return (animate('translate', [(t, f'{dx:g} {dy:g}') for t, (dx, dy, _) in poses], True),
-            animate('rotate', [(t, f'{a:g} {x} 224') for t, (_, _, a) in poses], True))
+            animate('rotate', [(t, f'{a:g} {x} 224') for t, (_, _, a) in poses], True),
+            animate('rotate', [(t, f'{upper(player, t):.1f} {hx} {hy:g}') for t in times], True))
 
 
 def alive(player, t):
@@ -110,22 +149,26 @@ def dissolve(player, death, c):
     samples = [body[i * len(body) // 36] for i in range(36)]
     points = [(x - facing * sx * (px - anchor), 270 + sy * (py - bottom))
               for px, py, _, _ in samples]
+    staggered = [positioned(player, px, py, death + .10) for px, py, _, _ in samples]
 
-    def path(progress):
+    def path(progress, returning=False):
         out = []
         for i, (px, py) in enumerate(points):
             angle = i * 2.4
             vx, vy = math.cos(angle) * (22 + i % 6 * 6), -24 - i % 7 * 5
             # Stable particle order lets one path interpolate all 36 trajectories.
-            xx = px + vx * progress
-            yy = min(GROUND, py + vy * progress + 100 * progress * progress)
+            hit_x, hit_y = staggered[i]
+            weight = 0 if returning else 1 - progress
+            xx = px + (hit_x - px) * weight + vx * progress
+            yy = min(GROUND, py + (hit_y - py) * weight + vy * progress + 100 * progress * progress)
             out.append(f'M{xx:.0f} {yy:.0f}h0')
         return ''.join(out)
 
     rest, middle, far = path(0), path(.5), path(1)
     start = round(death + .10, 2)
     keys = [(0, rest), (start, rest), (death + .35, middle), (death + .65, far),
-            (death + .80, far), (death + .95, middle), (death + 1.10, rest), (LOOP, rest)]
+            (death + .80, far), (death + .95, path(.5, True)),
+            (death + 1.10, path(0, True)), (LOOP, path(0, True))]
     opacity = [(0, 0), (start, 0), (start + .01, 1), (death + .65, 0),
                (death + .80, 0), (death + .95, 1), (death + 1.10, 0), (LOOP, 0)]
     return (f'<path d="{rest}" fill="none" stroke="{c["text"]}" stroke-width="3" '
@@ -136,7 +179,9 @@ def dissolve(player, death, c):
 def scene(c) -> list[str]:
     """SVG fragments for the stage and score of an 1180 by 300 project cover."""
     sx, sy, anchor, bottom, tip, tip_y = geometry()
-    parts = [f'<defs><g id="duel-soldier">{dots_path(drawing())}</g>'
+    split = bottom - HEIGHT / sy * .34
+    parts = [f'<defs><g id="duel-upper">{dots_path([d for d in drawing() if d[1] < split])}</g>'
+             f'<g id="duel-lower">{dots_path([d for d in drawing() if d[1] >= split])}</g>'
              f'<linearGradient id="duel-trail" gradientUnits="userSpaceOnUse" '
              f'x1="-33" y1="0" x2="-9" y2="0"><stop stop-color="{c["text"]}" stop-opacity="0"/>'
              f'<stop offset="1" stop-color="{c["text"]}"/></linearGradient>'
@@ -152,7 +197,7 @@ def scene(c) -> list[str]:
     parts.append(animate('translate', shake, True))
     parts.append(line(40, GROUND + 2, 1140, GROUND + 2, c['line'], 'stroke-dasharray="2 6"'))
     for player, (x, facing) in enumerate(PLAYERS):
-        move, turn = track(player)
+        move, turn, aim = track(player)
         place = (f'translate({x} 270) scale({-facing * sx:.4f} {sy:.4f}) '
                  f'translate({-anchor:.2f} {-bottom})')
         flash = schedule('stroke', lambda t: c['text'] if any(
@@ -163,8 +208,19 @@ def scene(c) -> list[str]:
                      f'fill="{c["accent"]}" opacity=".12"/>')
         parts.append(f'<g clip-path="url(#duel-floor)"><g>{move}<g>{turn}<g stroke="{c["accent"]}" '
                      f'stroke-linecap="round" fill="none">{flash}'
-                     f'<use href="#duel-soldier" transform="{place}">{visibility}</use>'
+                     f'<g>{visibility}<use href="#duel-lower" transform="{place}"/>'
+                     f'<g>{aim}<use href="#duel-upper" transform="{place}"/></g></g>'
                      '</g></g>' + text(x, 78, f'P{player + 1}', c['muted'], 11, 'middle', 700) + '</g></g>')
+    # Magazine particles are drawn before the fences, so they fall behind the mesh.
+    for when, shooter, _ in SHOTS:
+        x, facing = PLAYERS[shooter]
+        start = when + .10
+        drop = [(0, '0 0'), (start, '0 0'), (start + .12, f'{-facing * 4} 12'),
+                (start + .30, f'{-facing * 8} {GROUND - 198}'),
+                (LOOP, f'{-facing * 8} {GROUND - 198}')]
+        parts.append(f'<path class="duel-magazine" d="M{x + facing * 16} 198l1 3" '
+                     f'stroke="{c["accent"]}" stroke-width="2" opacity="0">'
+                     f'{pulse(start, .32)}{animate("translate", drop, True)}</path>')
     # Dissolution stays behind cover, just like the waist and the ducked drawing.
     for when, shooter, kill in SHOTS:
         if kill:
@@ -200,9 +256,7 @@ def scene(c) -> list[str]:
         parts.append('</g>')
     for when, shooter, kill in SHOTS:
         x, facing = PLAYERS[shooter]
-        dx, dy, _ = pose(shooter, when)
-        mx = round(x - facing * sx * (tip - anchor) + dx, 1)
-        my = round(270 + sy * (tip_y - bottom) + dy, 1)
+        mx, my = (round(value, 1) for value in positioned(shooter, tip, tip_y, when))
         victim = 1 - shooter
         tx = PLAYERS[victim][0] + facing * 5
         ty = my if kill else FENCE_TOP
@@ -259,11 +313,24 @@ if __name__ == '__main__':
         assert when + FLIGHT + (1.10 if kill else 0) < next_shot, 'Arrival or respawn overlaps next shot'
     for player in range(2):
         assert pose(player, 0) == pose(player, LOOP), 'Idle motion must loop'
+        assert abs(upper(player, 0) - upper(player, LOOP)) < 1e-9, 'Shoulder sway must loop'
+    assert upper(0, 0) != upper(1, 0), 'Soldiers must aim independently'
     for when, shooter, kill in SHOTS:
         assert pose(shooter, when + .03)[0] == -PLAYERS[shooter][1] * 6
         assert abs(pose(shooter, when + .03)[2]) == 4
+        peak = when + .10
+        sway = 1.5 * math.sin(2 * math.pi * (peak / LOOP * (2 + shooter) + shooter * .25))
+        assert abs(upper(shooter, peak) - sway - PLAYERS[shooter][1] * 6) < 1e-9
         if kill:
             death = round(when + FLIGHT, 2)
+            victim = 1 - shooter
+            hit = pose(victim, death + .10)
+            assert hit[0] == -PLAYERS[victim][1] * 10
+            assert hit[2] == -PLAYERS[victim][1] * 8
+            particles = ET.fromstring(dissolve(victim, death, THEMES['dark']))
+            body = [d for d in drawing() if d[0] >= geometry()[2] - 35]
+            px, py = positioned(victim, *body[0][:2], death + .10)
+            assert particles.get('d').startswith(f'M{px:.0f} {min(GROUND, py):.0f}h0'), 'Dissolve must start in the staggered pose'
             assert alive(1 - shooter, death + .20) == 0
             assert 0 < alive(1 - shooter, death + .95) < 1
             assert alive(1 - shooter, death + 1.11) == 1
@@ -282,7 +349,7 @@ if __name__ == '__main__':
         content = ''.join(scene(theme))
         root = ET.fromstring(f'<svg>{content}</svg>')
         size = len(content.encode('utf-8'))
-        assert size < 45_000, f'Scene exceeds 45 KB: {size} bytes'
+        assert size < 48_000, f'Scene exceeds 48 KB: {size} bytes'
         bounds = root.find('.//clipPath[@id="duel-bounds"]/rect')
         assert bounds.attrib == dict(x='40', y='56', width='1100', height='236')
         floor = root.find('.//clipPath[@id="duel-floor"]/rect')
@@ -293,8 +360,16 @@ if __name__ == '__main__':
                    label.get('font-size') == '13' and label.get('font-weight') == '700'
                    for label in hud)
         assert [label.get('opacity') for label in hud] == ['1', '0', '0']
-        assert len(root.findall('.//use')) == 2
-        assert len(root.findall('.//g[@id="duel-soldier"]')) == 1
+        assert len(root.findall('.//use')) == 4
+        assert len(root.findall('.//g[@id="duel-upper"]')) == 1
+        assert len(root.findall('.//g[@id="duel-lower"]')) == 1
+        assert len(root.findall('.//path[@class="duel-magazine"]')) == len(SHOTS)
+        for use in root.findall('.//use'):
+            assert use.get('transform').startswith('translate('), 'Static soldiers must stand and aim'
+        for magazine in root.findall('.//path[@class="duel-magazine"]'):
+            assert magazine.get('opacity') == '0'
+            assert list(root.find('./g/g')).index(magazine) < next(
+                i for i, node in enumerate(root.find('./g/g')) if node.get('class') == 'duel-fence')
         fences = root.findall('.//g[@class="duel-fence"]')
         assert len(fences) == len(PLAYERS)
         for fence, (x, _) in zip(fences, PLAYERS):

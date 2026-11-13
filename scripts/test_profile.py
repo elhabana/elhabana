@@ -50,6 +50,16 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(out,sorted(points,key=lambda p:(p[1],p[0])))
         self.assertEqual(visuals.dots_d([(1.4,2.6),(3.6,-1.2)],whole=True),'M4-1h0m-3 4h0')
 
+    def test_card_animations(self):
+        for name,content in cards.render_all().items():
+            root=ET.fromstring(content)
+            anims=[n for n in root.iter() if n.tag.split('}')[1] in ('animate','animateTransform')]
+            self.assertTrue(anims,name)
+            for node in anims:
+                if node.get('keyTimes'):
+                    self.assertEqual(len(node.get('values').split(';')),len(node.get('keyTimes').split(';')),name)
+                self.assertTrue(node.get('repeatCount')=='indefinite' or node.get('fill')=='freeze',name)
+
     def test_cards_link_to_rookies(self):
         readme=(ASSETS.parent/'README.md').read_text(encoding='utf-8')
         for name in cards.render_all():

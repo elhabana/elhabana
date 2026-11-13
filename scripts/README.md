@@ -46,8 +46,18 @@ Every overlay is hidden or settled by default, so static renderers show the
 finished banner with the whole terminal session and the heroes in their neutral
 pose; PNG exports do not preserve animation.
 
-`cards.py` draws the static project cards (Roller Hunter, FPS Online) in the
-header's terminal style. The README links each card to its project on The Rookies.
+`cards.py` draws the project cards with the cover's size and layout (1180x300,
+title top left, a tag top right); the README stacks them under the cover and
+links each one to its project on The Rookies. `skater.py` (Roller Hunter): the
+hero of the trailer's opening comic skates in, shoots a demon into particles,
+kickflips over the second one shooting it from the air, lands in a puff of dust
+and skates off; the demons respawn. `duel.py` (FPS Online): two soldiers behind
+cover trade hitscan shots with recoil, muzzle flash, tracers, casings and camera
+shake; a kill dissolves the victim into particles that converge again to respawn
+it, and a score sits in the header. Their particles were extracted once from
+frames of the videos (the comic's line art, with the body filled in as a plain
+suit; the soldier, too dark to segment, traced by hand over a frame) into
+`assets/rollerhunter/` and `assets/fpsonline/`; the videos are not kept in the repo.
 
 `system-view.html` is the interactive version. Open it in a browser and press
 **Activar sonido** to hear short synthesized chirps when the avatar opens its

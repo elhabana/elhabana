@@ -42,10 +42,9 @@ I'm **Cristian Habana / elhabana**, a game developer working mainly with **Unity
   <img src="assets/uncredibles-dark.svg" width="100%" alt="UN-CREDIBLES — four particle heroes brawling. Multiplayer superhero party game, in development." />
 </picture>
 
-<p align="center">
-<a href="https://www.therookies.co/projects/100977"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/card-roller-hunter-dark.svg" /><source media="(prefers-color-scheme: light)" srcset="assets/card-roller-hunter-light.svg" /><img src="assets/card-roller-hunter-dark.svg" width="49%" alt="Roller Hunter — third-person skating and combat with hordes and roguelike progression. View on The Rookies." /></picture></a>
-<a href="https://www.therookies.co/projects/96706"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/card-fps-online-dark.svg" /><source media="(prefers-color-scheme: light)" srcset="assets/card-fps-online-light.svg" /><img src="assets/card-fps-online-dark.svg" width="49%" alt="FPS Online — online combat prototype with synced players and hitscan shooting. View on The Rookies." /></picture></a>
-</p>
+<a href="https://www.therookies.co/projects/100977"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/card-roller-hunter-dark.svg" /><source media="(prefers-color-scheme: light)" srcset="assets/card-roller-hunter-light.svg" /><img src="assets/card-roller-hunter-dark.svg" width="100%" alt="Roller Hunter — the opening comic of its trailer as particles: a boring day, BOOM, the helmet goes on and the hero skates off. Skating shooter with roguelike progression. View on The Rookies." /></picture></a>
+
+<a href="https://www.therookies.co/projects/96706"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/card-fps-online-dark.svg" /><source media="(prefers-color-scheme: light)" srcset="assets/card-fps-online-light.svg" /><img src="assets/card-fps-online-dark.svg" width="100%" alt="FPS Online — two particle soldiers trade hitscan shots from behind cover. Online FPS prototype with synced players. View on The Rookies." /></picture></a>
 
 ---
 

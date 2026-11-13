@@ -209,10 +209,10 @@ def track(hero):
             'shadow': ';'.join(f'{dx} 0' for dx, _, _ in steps),
             'shadow_rx': ';'.join(f'{38 * max(.45, 1 + min(0, dy) / 110):.1f}' for _, dy, _ in steps)}
 
-def burst(when, x, y, ink, ground=False):
+def burst(when, x, y, ink, ground=False, loop=LOOP):
     """Particles flying out of an impact point, or a puff of dust along the ground."""
     rnd, out = random.Random(int(when * 100) + ground), []
-    k = lambda t: f'{min(t, LOOP) / LOOP:.4f}'
+    k = lambda t: f'{min(t, loop) / loop:.4f}'
     for _ in range(16 if ground else 12):
         if ground:
             ex, ey = round(rnd.choice((-1, 1)) * rnd.uniform(16, 62)), round(-rnd.uniform(2, 22))
@@ -221,22 +221,22 @@ def burst(when, x, y, ink, ground=False):
             ex, ey = round(math.cos(angle) * reach), round(math.sin(angle) * reach)
         out.append(f'<circle cx="{x}" cy="{y}" r="{rnd.uniform(1.2, 2.4):.1f}" fill="{ink}" opacity="0">'
                    f'<animate attributeName="opacity" values="0;0;1;0;0" keyTimes="0;{k(when)};{k(when + .05)};{k(when + .45)};1" '
-                   f'dur="{LOOP}s" repeatCount="indefinite"/>'
+                   f'dur="{loop}s" repeatCount="indefinite"/>'
                    f'<animateTransform attributeName="transform" type="translate" values="0 0;0 0;{ex} {ey};{ex} {ey}" '
-                   f'keyTimes="0;{k(when)};{k(when + .45)};1" dur="{LOOP}s" repeatCount="indefinite"/></circle>')
+                   f'keyTimes="0;{k(when)};{k(when + .45)};1" dur="{loop}s" repeatCount="indefinite"/></circle>')
     return out
 
-def schedule(attribute, value_at):
+def schedule(attribute, value_at, loop=LOOP):
     """A looping discrete animation from a function of time, keeping only the changes."""
     keys, values = [], []
-    for i in range(int(LOOP / .01)):
+    for i in range(int(loop / .01)):
         t = round(i * .01, 2)
         v = str(value_at(t))
         if not values or v != values[-1]:
-            keys.append(f'{t / LOOP:.4f}')
+            keys.append(f'{t / loop:.4f}')
             values.append(v)
     return (f'<animate attributeName="{attribute}" values="{";".join(values)}" keyTimes="{";".join(keys)}" '
-            f'dur="{LOOP}s" calcMode="discrete" repeatCount="indefinite"/>')
+            f'dur="{loop}s" calcMode="discrete" repeatCount="indefinite"/>')
 
 def dots_path(dots):
     """Particles as round-capped zero-length strokes, one path per brightness level:

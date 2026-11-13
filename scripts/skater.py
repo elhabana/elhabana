@@ -1,9 +1,9 @@
 """Roller Hunter card: the hero skates through two demons, in the style of the UN-CREDIBLES cover.
 
-The hero ("here we go", on skates, pistol in hand) and a demon were extracted once from
+The hero ("here we go", on skates, slingshot in hand) and a demon were extracted once from
 the comic that opens the game's trailer into assets/rollerhunter/particles.json; the
-frames are not kept in the repo. The hero skates in, shoots the first demon, kickflips
-over the second one shooting it from the air, lands in a puff of dust and skates off;
+frames are not kept in the repo. The hero skates in, slings a stone at the first demon, kickflips
+over the second one hitting it from the air, lands in a puff of dust and skates off;
 the demons respawn for the next loop. Static renderers show everyone standing.
 """
 import json
@@ -23,6 +23,7 @@ PATH = ((0, -110), (.3, -110), (1.4, 330), (2.6, 700), (3.3, 1010), (4.3, 1300),
 JUMP = (2.6, 3.3, 40)           # start, landing, height
 DEMONS = (600, 860)             # x of each demon
 SHOTS = ((1.4, 0), (2.95, 1))   # (time, demon): the second one from the top of the flip
+FLIGHT = .22                    # seconds a slingshot stone takes to reach its demon
 RESPAWN = 5.2
 STATIC_X = 330                  # where the hero stands for static renderers
 
@@ -53,7 +54,7 @@ def hero(t):
 
 def demon_dead(i, t):
     """Hidden from just after its hit until the respawn."""
-    when = SHOTS[i][0]
+    when = SHOTS[i][0] + FLIGHT
     return when + .15 <= t < RESPAWN
 
 def scale(name):
@@ -65,9 +66,9 @@ def pivot():
     return -HERO_H * .5
 
 def gun(t):
-    """Card position of the hero's muzzle at t, rotation included (the drawing is mirrored)."""
+    """Card position of the hero's slingshot hand at t, rotation included (the drawing is mirrored)."""
     dots, w, h = drawing('go')
-    # the pistol is in the hand on the drawing's left; mirrored it points right
+    # the slingshot is in the hand on the drawing's left; mirrored it is on the right
     hand = [(x, y) for x, y, _, _ in dots if x < w * .45 and h * .3 < y < h * .52]
     gx = max(w - x for x, _ in hand) - w / 2
     gy = sum(y for _, y in hand) / len(hand) - h
@@ -110,7 +111,7 @@ def scene(c):
              f'<line x1="40" y1="{GROUND + 2}" x2="1140" y2="{GROUND + 2}" stroke="{c["line"]}" stroke-dasharray="2 6"/>']
     # demons: idle bob, hit flash, knocked back, gone until the respawn (which fades them in)
     for i, x in enumerate(DEMONS):
-        when = SHOTS[i][0]
+        when = SHOTS[i][0] + FLIGHT     # everything happens when the stone lands
         shown = schedule('opacity', lambda t, i=i: 0 if demon_dead(i, t) else 1, LOOP)
         flash = schedule('stroke', lambda t, when=when: hot if when <= t < when + .12 else ink, LOOP)
         knock = (f'<animateTransform attributeName="transform" type="translate" '
@@ -142,18 +143,24 @@ def scene(c):
                  # the label follows the hero but never spins with it
                  f'<text x="0" y="{GROUND - HERO_H - 12}" fill="{c["muted"]}" font-size="12" font-weight="700" text-anchor="middle">P1</text>'
                  '</g>')
-    # shots: muzzle flash and a tracer to the demon's chest
+    # shots: in the game he hunts with a slingshot. The band snaps, a stone arcs to the demon's chest.
     for when, i in SHOTS:
         gx, gy = gun(when)
-        tx, ty = DEMONS[i] + 4, GROUND - DEMON_H * .55
-        parts.append(f'<line x1="{gx}" y1="{gy}" x2="{tx:.0f}" y2="{ty:.0f}" stroke="{hot}" stroke-width="3" stroke-linecap="round" opacity="0">'
-                     f'<animate attributeName="opacity" values="0;0;1;.35;0;0" keyTimes="0;{k(when)};{k(when + .02)};{k(when + .08)};{k(when + .2)};1" '
+        tx, ty = DEMONS[i] + 4, round(GROUND - DEMON_H * .55)
+        steps = [j / 6 for j in range(7)]
+        arc = ';'.join(f'{(tx - gx) * u:.0f} {(ty - gy) * u - 28 * 4 * u * (1 - u):.0f}' for u in steps)
+        keys = ';'.join(['0'] + [k(when + FLIGHT * u) for u in steps] + ['1'])
+        first, last = arc.split(';')[0], arc.split(';')[-1]
+        parts.append(f'<circle cx="{gx}" cy="{gy}" r="3.5" fill="{hot}" opacity="0">'
+                     f'<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;{k(when)};{k(when + .01)};{k(when + FLIGHT - .01)};{k(when + FLIGHT)};1" '
                      f'dur="{LOOP}s" repeatCount="indefinite"/>'
-                     f'<animate attributeName="stroke-width" values="3;3;3;1;1" keyTimes="0;{k(when)};{k(when + .05)};{k(when + .2)};1" '
-                     f'dur="{LOOP}s" repeatCount="indefinite"/></line>'
-                     f'<circle cx="{gx}" cy="{gy}" r="9" fill="{hot}" opacity="0">'
-                     f'<animate attributeName="opacity" values="0;0;1;0;0" keyTimes="0;{k(when)};{k(when + .01)};{k(when + .09)};1" '
-                     f'dur="{LOOP}s" repeatCount="indefinite"/></circle>')
+                     f'<animateTransform attributeName="transform" type="translate" values="{first};{arc};{last}" keyTimes="{keys}" '
+                     f'dur="{LOOP}s" repeatCount="indefinite"/></circle>'
+                     # the band snapping back: a small V at the hand
+                     f'<path d="M{gx - 7} {gy - 8}L{gx + 3} {gy}L{gx - 7} {gy + 8}" fill="none" stroke="{hot}" stroke-width="2" stroke-linecap="round" opacity="0">'
+                     f'<animate attributeName="opacity" values="0;0;1;0;0" keyTimes="0;{k(when)};{k(when + .01)};{k(when + .12)};1" '
+                     f'dur="{LOOP}s" repeatCount="indefinite"/></path>')
+        when += FLIGHT
         parts += burst(when, round(tx), round(ty), hot, loop=LOOP)
     # skate sparks while gliding, a big puff of dust on landing
     for when in (.9, 1.9, 2.4, 3.7):

@@ -4,12 +4,14 @@ import math
 from functools import lru_cache
 
 from heroes import dots_path, burst, schedule
-from visuals import ASSETS, THEMES, line, rect, text
+from visuals import ASSETS, THEMES, line, text
 
 LOOP = 5.6
 DT = .05
 HEIGHT = 180
 GROUND = 276
+FENCE_TOP = 210
+FENCE_HALF = 80
 PLAYERS = ((300, 1), (880, -1))
 # (trigger time, shooter, kill); arrival effects follow the bullet's flight.
 SHOTS = ((.60, 0, False), (1.45, 1, True), (3.55, 0, True))
@@ -56,8 +58,10 @@ def pose(player, t):
             dx -= facing * 6 * kick
             angle -= facing * 4 * kick
         elif not kill:
-            dy += ramp(t, [(when - .20, 0), (when - .06, 160),
-                           (when + FLIGHT + .06, 160), (when + FLIGHT + .28, 0)])
+            # Move the entire drawing below the floor clip, even through translucent mesh.
+            duck = GROUND - (270 - HEIGHT) + 4
+            dy += ramp(t, [(when - .20, 0), (when - .06, duck),
+                           (when + FLIGHT + .06, duck), (when + FLIGHT + .28, 0)])
     return round(dx, 1), round(dy, 1), round(angle, 1)
 
 
@@ -166,11 +170,34 @@ def scene(c) -> list[str]:
         if kill:
             parts.append('<g clip-path="url(#duel-floor)">' +
                          dissolve(1 - shooter, round(when + FLIGHT, 2), c) + '</g>')
-    for x, _ in PLAYERS:
-        parts.extend((rect(x - 43, 226, 86, 50, c['panel'], c['line'], 3),
-                      line(x - 36, 234, x + 36, 234, c['line']),
-                      line(x - 34, 268, x + 34, 239, c['line']),
-                      line(x - 34, 239, x + 34, 268, c['line'])))
+    for player, (x, _) in enumerate(PLAYERS):
+        left, right = x - FENCE_HALF, x + FENCE_HALF
+        height = GROUND - FENCE_TOP
+        parts.append('<g class="duel-fence">')
+        for when, shooter, kill in SHOTS:
+            if not kill and shooter != player:
+                arrival = round(when + FLIGHT, 2)
+                parts.append(animate('translate', [(0, '0 0'), (arrival, '0 0'),
+                    (arrival + .03, '2 0'), (arrival + .07, '-2 0'),
+                    (arrival + .11, '1 0'), (arrival + .15, '0 0'), (LOOP, '0 0')], True))
+        parts.append(f'<rect x="{left}" y="{FENCE_TOP}" width="{FENCE_HALF * 2}" height="{height}" '
+                     f'fill="{c["bg"]}" fill-opacity=".85"/>')
+        mesh = []
+        for start in range(-height, FENCE_HALF * 2, 14):
+            a, b = max(0, start), min(FENCE_HALF * 2, start + height)
+            for direction in (1, -1):
+                y = FENCE_TOP if direction == 1 else GROUND
+                mesh.append(f'M{left + a} {y + direction * (a - start)}'
+                            f'L{left + b} {y + direction * (b - start)}')
+        parts.append(f'<path class="duel-mesh" d="{"".join(mesh)}" fill="none" '
+                     f'stroke="{c["line"]}" stroke-width=".7"/>')
+        for post in (left, x, right):
+            parts.append(line(post, FENCE_TOP - 4, post, GROUND, c['line'], 'stroke-width="2"'))
+        for rail in (FENCE_TOP, GROUND - 12):
+            parts.append(line(left, rail, right, rail, c['line'], 'stroke-width="2"'))
+        parts.append(line(left, FENCE_TOP, right, FENCE_TOP, c['accent'],
+                          'stroke-width="2" opacity=".4"'))
+        parts.append('</g>')
     for when, shooter, kill in SHOTS:
         x, facing = PLAYERS[shooter]
         dx, dy, _ = pose(shooter, when)
@@ -178,7 +205,7 @@ def scene(c) -> list[str]:
         my = round(270 + sy * (tip_y - bottom) + dy, 1)
         victim = 1 - shooter
         tx = PLAYERS[victim][0] + facing * 5
-        ty = my if kill else 226
+        ty = my if kill else FENCE_TOP
         rays = ''.join(f'M{mx + math.cos(i * math.pi / 4) * 4:.1f} '
                        f'{my + math.sin(i * math.pi / 4) * 4:.1f}'
                        f'l{math.cos(i * math.pi / 4) * 14:.1f} '
@@ -241,7 +268,9 @@ if __name__ == '__main__':
             assert 0 < alive(1 - shooter, death + .95) < 1
             assert alive(1 - shooter, death + 1.11) == 1
         else:
-            assert pose(1 - shooter, when + FLIGHT)[1] > 155
+            for i in range(7):
+                t = when + FLIGHT - .03 + i * .01
+                assert 270 - HEIGHT + pose(1 - shooter, t)[1] > GROUND, 'Duck must fully hide the soldier'
     sx, sy, anchor, bottom, tip, _ = geometry()
     assert sx == sy, 'Soldiers must retain their original proportions'
     assert PLAYERS[0][0] + sx * (anchor - tip) < PLAYERS[1][0] - sx * (anchor - tip), 'Pistols overlap'
@@ -266,9 +295,27 @@ if __name__ == '__main__':
         assert [label.get('opacity') for label in hud] == ['1', '0', '0']
         assert len(root.findall('.//use')) == 2
         assert len(root.findall('.//g[@id="duel-soldier"]')) == 1
+        fences = root.findall('.//g[@class="duel-fence"]')
+        assert len(fences) == len(PLAYERS)
+        for fence, (x, _) in zip(fences, PLAYERS):
+            backing = fence.find('rect')
+            assert backing.get('fill') == theme['bg'] and backing.get('fill-opacity') == '.85'
+            assert float(backing.get('x')) == x - FENCE_HALF
+            assert float(backing.get('width')) == 160 and float(backing.get('y')) == FENCE_TOP
+            assert float(backing.get('height')) == GROUND - FENCE_TOP
+            assert len(fence.findall('line')) == 6
+            mesh = fence.find('path[@class="duel-mesh"]')
+            assert mesh.get('stroke') == theme['line'] and mesh.get('stroke-width') == '.7'
+            assert mesh.get('d').count('M') >= 30
+        assert fences[0].find('animateTransform') is None
+        shake = fences[1].find('animateTransform')
+        assert shake.get('values') == '0 0;0 0;2 0;-2 0;1 0;0 0;0 0'
+        shake_keys = [float(t) * LOOP for t in shake.get('keyTimes').split(';')]
+        assert abs(shake_keys[1] - SHOTS[0][0] - FLIGHT) < .001
+        assert abs(shake_keys[-2] - shake_keys[1] - .15) < .001
         bullets = root.findall('.//g[@class="duel-bullet"]')
         assert len(bullets) == len(SHOTS)
-        for bullet, (when, _, _) in zip(bullets, SHOTS):
+        for bullet, (when, shooter, kill) in zip(bullets, SHOTS):
             assert bullet.get('opacity') == '0', 'Bullets must be hidden without SMIL'
             motion = bullet.find('animateTransform')
             keys = [float(t) for t in motion.get('keyTimes').split(';')]
@@ -276,6 +323,9 @@ if __name__ == '__main__':
             assert abs(keys[2] * LOOP - when - FLIGHT) < .001
             positions = motion.get('values').split(';')
             assert positions[0] == positions[1] and positions[2] == positions[3]
+            if not kill:
+                tx, ty = map(float, positions[2].split())
+                assert abs(tx - PLAYERS[1 - shooter][0]) < FENCE_HALF and ty == FENCE_TOP
             visibility = bullet.find('animate')
             assert visibility.get('values') == '0;1;0'
             assert visibility.get('keyTimes').split(';') == motion.get('keyTimes').split(';')[:3]

@@ -8,7 +8,7 @@ W, H = 1180, 300
 # (file slug, title, tags, scene, accessible description)
 CARDS = (
     ('roller-hunter', 'ROLLER HUNTER', 'SHOOTER · ROGUELIKE', skater.scene,
-     'the hero of the trailer\'s comic skates in, shoots two demons into particles, one of them from a kickflip, and skates off'),
+     'the hero of the trailer\'s comic skates in and hits two demons with slingshot stones, one of them from a kickflip; they burst into particles and he skates off'),
     ('fps-online', 'FPS ONLINE', 'MULTIPLAYER · FPS', duel.scene,
      'two particle soldiers with AKs shoot at each other from behind cover, die and respawn'),
 )

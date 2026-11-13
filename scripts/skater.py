@@ -49,6 +49,7 @@ def hero(t):
     start, land, height = JUMP
     x = ramp(t, PATH)
     dy, angle = 2 * math.sin(2 * math.pi * t / STRIDE), 5   # stride bob, leaning into the skate
+    angle += 3 * math.sin(2 * math.pi * t / STRIDE) * (1 if body()[3][0][0] > 0 else -1)
     if start <= t <= land:
         u = (t - start) / (land - start)
         dy = -4 * height * u * (1 - u)
@@ -66,15 +67,25 @@ def jumping(t):
     start, land, _ = JUMP
     return math.sin(math.pi * (t - start) / (land - start)) if start <= t <= land else 0
 
+def stride(side, t):
+    """Opposite sine phases, with a short hold at full push."""
+    wave = round(math.sin(2 * math.pi * (t / STRIDE + side * .5)), 10)
+    return min(1, wave / .9) if wave > 0 else wave
+
+
 def leg(side, t):
-    """Angle of one leg around its hip and how far it is tucked up. On the ground the legs
-    push outwards in turn; in the
-    air both knees come up and out."""
+    """Hip rotation and local tuck; the planted skate keeps its standing height."""
     out = 1 if body()[3][side][0] < 0 else -1      # turning clockwise swings a foot to the left
     if jumping(t):
         return out * 12 * jumping(t), -16 * jumping(t)
-    push = math.sin(2 * math.pi * t / STRIDE + (0 if side == 0 else math.pi))
-    return out * 16 * max(0, push), -4 * max(0, -push)
+    wave = stride(side, t)
+    recovery = max(0, -wave)
+    angle = out * (24 * max(0, wave) - 38 * recovery)
+    hx, hy = body()[3][side]
+    ax, ay = body()[4][side]
+    r = math.radians(angle)
+    dy = (ax - hx) * math.sin(r) + (ay - hy) * (math.cos(r) - 1)
+    return angle, (-8 * recovery - dy) / math.cos(r)
 
 @lru_cache(maxsize=None)
 def body():
@@ -179,8 +190,11 @@ def scene(c):
     shadow = ';'.join(f'{x:.0f} 0' for x, _, _ in track)
     squashes = ';'.join(f'{1 + (1 - squash(t)) * .5:.3f} {squash(t):.3f}' for t in times)
     limbs = ''
+    limb_defs = ''
     for side in (0, 1):
         hx, hy = hips[side]
+        out = 1 if hx < 0 else -1
+        shift = ';'.join(f'{out * 8 * max(0, -stride(side, t)) if not jumping(t) else 0:.1f} 0' for t in times)
         turn = ';'.join(f'{leg(side, t)[0]:.1f} {hx} {hy}' for t in times)
         tuck = ';'.join(f'0 {leg(side, t)[1]:.1f}' for t in times)
         # the skate follows the ankle as the leg swings but stays flat on the ground
@@ -193,11 +207,19 @@ def scene(c):
             # the leg's tuck is applied inside its rotation, so the skate's must be rotated too
             return f'{dx - lift * math.sin(r):.1f} {dy + lift * math.cos(r):.1f}'
         step = ';'.join(follow(t) for t in times)
-        limbs += (f'<g><animateTransform attributeName="transform" type="rotate" values="{turn}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
+        limb_defs += (f'<g id="rh-stride{side}"><animateTransform attributeName="transform" type="translate" values="{shift}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
+                  f'<g><animateTransform attributeName="transform" type="rotate" values="{turn}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
                   f'<g><animateTransform attributeName="transform" type="translate" values="{tuck}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
                   f'<use href="#rh-leg{side}" transform="translate(0 {GROUND}) {place("go", mirror=True)}"/></g></g>'
                   f'<g><animateTransform attributeName="transform" type="translate" values="{step}" keyTimes="{keys}" dur="{LOOP}s" repeatCount="indefinite"/>'
-                  f'<use href="#rh-foot{side}" transform="translate(0 {GROUND}) {place("go", mirror=True)}"/></g>')
+                  f'<use href="#rh-foot{side}" transform="translate(0 {GROUND}) {place("go", mirror=True)}"/></g></g>')
+    parts.append(f'<defs>{limb_defs}</defs>')
+    # Reference each animated limb in back/front layers without duplicating its tracks.
+    for front in (0, 1):
+        for side in (0, 1):
+            shown = schedule('opacity', lambda t, side=side, front=front: int(
+                int(not jumping(t) and stride(side, t) < 0) == front), LOOP)
+            limbs += f'<use href="#rh-stride{side}" opacity="{1 - front}">{shown}</use>'
     # aiming: the band of the slingshot is drawn back to the pouch, then snaps forward on release
     hx, hy = hand()
     pull, seen = [(0, hx)], [(0, 0)]
@@ -256,3 +278,37 @@ def scene(c):
         parts += burst(when, round(x), GROUND, ink, ground=True, loop=LOOP)[:6]
     parts += burst(JUMP[1], round(hero(JUMP[1])[0]), GROUND, ink, ground=True, loop=LOOP)
     return parts
+
+
+if __name__ == '__main__':
+    from cards import CARDS, card
+    from visuals import THEMES
+    from xml.etree import ElementTree as ET
+
+    for side in (0, 1):
+        out = 1 if body()[3][side][0] < 0 else -1
+        push, recovery = STRIDE * (.25 + side * .5), STRIDE * (.75 - side * .5)
+        assert abs(leg(side, push)[0] - out * 24) < 1e-9
+        assert abs(leg(side, recovery)[0] + out * 38) < 1e-9
+        assert stride(side, push - .02) == stride(side, push + .02) == 1
+        hx, hy = body()[3][side]
+        ax, ay = body()[4][side]
+        for t in (push, recovery):
+            angle, lift = leg(side, t)
+            r = math.radians(angle)
+            dy = (ax - hx) * math.sin(r) + (ay - hy) * (math.cos(r) - 1) + lift * math.cos(r)
+            assert abs(dy + 8 * max(0, -stride(side, t))) < 1e-9
+            assert all(abs(a - b) < 1e-9 for a, b in zip(leg(side, t), leg(side, t + STRIDE)))
+        t = sum(JUMP[:2]) / 2
+        assert abs(leg(side, t)[0] - out * 12) < 1e-9 and abs(leg(side, t)[1] + 16) < 1e-9
+    slug, title, tags, _, about = CARDS[0]
+    for theme in THEMES:
+        content = card(theme, slug, title, tags, scene, about)
+        assert len(content.encode('utf-8')) < 110_000, 'Card exceeds 110 KB'
+        root = ET.fromstring(content)
+        for node in root.iter():
+            if 'keyTimes' in node.attrib:
+                keys = list(map(float, node.get('keyTimes').split(';')))
+                assert len(keys) == len(node.get('values').split(';'))
+                assert all(a < b for a, b in zip(keys, keys[1:]))
+    print('Skating checks passed.')

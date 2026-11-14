@@ -1,4 +1,4 @@
-﻿"""Particle soldiers trading shots; static renderers keep both players aiming."""
+﻿"""Particle soldiers raising their rifles to fire; static renderers show low ready."""
 import json
 import math
 from functools import lru_cache
@@ -25,10 +25,10 @@ def soldier():
     return json.loads((ASSETS / 'fpsonline' / 'particles.json').read_text(encoding='utf-8'))['soldier']
 
 
-@lru_cache(maxsize=1)
-def drawing():
-    """Full-body front view, retaining outline, wood and uniform brightness."""
-    return [tuple(d) for d in soldier()['dots']]
+@lru_cache(maxsize=2)
+def drawing(rifle=False):
+    """Separate body and rifle particles, in the same source coordinates."""
+    return [tuple(d) for d in soldier()['rifle' if rifle else 'dots']]
 
 
 def geometry():
@@ -58,8 +58,8 @@ def pose(player, t):
     dy = 1.4 * math.sin(2 * math.pi * (t / LOOP * (5 + player) + player * .25))
     for when, shooter, kill in SHOTS:
         if shooter == player:
-            kick = ramp(t, [(when, 0), (when + .03, 1), (when + .15, 0)])
-            dx -= facing * 4 * kick
+            kick = ramp(t, [(when, 0), (when + .03, 1), (when + .12, 0)])
+            dx -= facing * 5 * kick
             angle -= facing * 2 * kick
         elif kill:
             death = round(when + FLIGHT, 2)
@@ -77,28 +77,34 @@ def pose(player, t):
 
 
 def upper(player, t):
-    """Independent shoulder sway and a brief muzzle dip after each shot."""
-    facing = PLAYERS[player][1]
-    angle = 1.5 * math.sin(2 * math.pi * (t / LOOP * (2 + player) + player * .25))
+    """Source-space rifle angle: low ready, eased raise, aim, kick, reload dip, lower."""
     for when, shooter, _ in SHOTS:
-        if shooter == player:
-            angle += facing * 6 * ramp(t, [(when, 0), (when + .10, 1), (when + .25, 0)])
-    return angle
+        if shooter != player or not when - .35 < t < when + .70:
+            continue
+        if t < when - .15:
+            u = (t - (when - .35)) / .20
+            return -35.4 * (1 - (1 - u) ** 3)
+        if t < when - .10:
+            u = (t - (when - .15)) / .05
+            return -33.4 - 2 * (1 - u) ** 2
+        angle = -33.4 + math.sin(2 * math.pi * (t - (when - .10)) / .20)
+        angle -= 6 * ramp(t, [(when, 0), (when + .03, 1), (when + .12, 0)])
+        angle += 4 * ramp(t, [(when + .12, 0), (when + .22, 1), (when + .35, 0)])
+        u = max(0, (t - (when + .40)) / .30)
+        return angle * (1 - u * u * (3 - 2 * u))
+    return 0
 
 
-def shoulder(player):
-    return PLAYERS[player][0], GROUND - HEIGHT * .72
-
-
-def positioned(player, px, py, t):
-    """Apply the same shoulder, recoil and stagger transforms used by the SVG."""
+def positioned(player, px, py, t, rifle=False):
+    """Rotate rifle points in source space, then apply the SVG's placement and pose."""
     sx, sy, anchor, bottom, _, _ = geometry()
     x, facing = PLAYERS[player]
-    xx, yy = x + facing * sx * (px - anchor), GROUND + sy * (py - bottom)
-    if py < bottom - HEIGHT / sy * .34:
-        hx, hy = shoulder(player)
+    if rifle:
+        hx, hy = soldier()['pivot']
         a = math.radians(round(upper(player, t), 1))
-        xx, yy = hx + (xx - hx) * math.cos(a) - (yy - hy) * math.sin(a), hy + (xx - hx) * math.sin(a) + (yy - hy) * math.cos(a)
+        px, py = (hx + (px - hx) * math.cos(a) - (py - hy) * math.sin(a),
+                  hy + (px - hx) * math.sin(a) + (py - hy) * math.cos(a))
+    xx, yy = x + facing * sx * (px - anchor), GROUND + sy * (py - bottom)
     dx, dy, angle = pose(player, t)
     a = math.radians(angle)
     return (x + (xx - x) * math.cos(a) - (yy - HIP_Y) * math.sin(a) + dx,
@@ -124,12 +130,12 @@ def pulse(when, duration):
 def track(player):
     times = sorted({round(i * DT, 2) for i in range(round(LOOP / DT) + 1)} |
                    {round(when + offset, 2) for when, _, _ in SHOTS
-                    for offset in (0, .03, .10, .15, .25, FLIGHT, FLIGHT + .10,
+                    for offset in (0, .03, .12, .22, .35, .40, .70, FLIGHT, FLIGHT + .10,
                                    FLIGHT + .28, FLIGHT + .65, FLIGHT + .80,
-                                   -.20, -.06, FLIGHT + .06)})
+                                   -.35, -.20, -.15, -.10, -.06, FLIGHT + .06)})
     poses = [(t, pose(player, t)) for t in times]
     x = PLAYERS[player][0]
-    hx, hy = shoulder(player)
+    hx, hy = soldier()['pivot']
     return (animate('translate', [(t, f'{dx:g} {dy:g}') for t, (dx, dy, _) in poses], True),
             animate('rotate', [(t, f'{a:g} {x} {HIP_Y:g}') for t, (_, _, a) in poses], True),
             animate('rotate', [(t, f'{upper(player, t):.1f} {hx} {hy:g}') for t in times], True))
@@ -147,14 +153,15 @@ def alive(player, t):
 
 
 def dissolve(player, death, c):
-    """36 body samples scatter ballistically, then retrace their paths to respawn."""
+    """36 body and rifle samples scatter, then retrace their paths to respawn."""
     sx, sy, anchor, bottom, _, _ = geometry()
     x, facing = PLAYERS[player]
-    body = drawing()
+    body = [(d, rifle) for rifle in (False, True) for d in drawing(rifle)]
     samples = [body[i * len(body) // 36] for i in range(36)]
     points = [(x + facing * sx * (px - anchor), GROUND + sy * (py - bottom))
-              for px, py, _, _ in samples]
-    staggered = [positioned(player, px, py, death + .10) for px, py, _, _ in samples]
+              for (px, py, _, _), _ in samples]
+    staggered = [positioned(player, px, py, death + .10, rifle)
+                 for (px, py, _, _), rifle in samples]
 
     def path(progress, returning=False):
         out = []
@@ -184,9 +191,8 @@ def dissolve(player, death, c):
 def scene(c) -> list[str]:
     """SVG fragments for the stage and score of an 1180 by 300 project cover."""
     sx, sy, anchor, bottom, tip, tip_y = geometry()
-    split = bottom - HEIGHT / sy * .34
-    parts = [f'<defs><g id="duel-upper">{dots_path([d for d in drawing() if d[1] < split])}</g>'
-             f'<g id="duel-lower">{dots_path([d for d in drawing() if d[1] >= split])}</g>'
+    parts = [f'<defs><g id="duel-body">{dots_path(drawing())}</g>'
+             f'<g id="duel-rifle">{dots_path(drawing(True))}</g>'
              f'<linearGradient id="duel-trail" gradientUnits="userSpaceOnUse" '
              f'x1="-33" y1="0" x2="-9" y2="0"><stop stop-color="{c["text"]}" stop-opacity="0"/>'
              f'<stop offset="1" stop-color="{c["text"]}"/></linearGradient>'
@@ -213,15 +219,15 @@ def scene(c) -> list[str]:
                      f'fill="{c["accent"]}" opacity=".12"/>')
         parts.append(f'<g clip-path="url(#duel-floor)"><g>{move}<g>{turn}<g stroke="{c["accent"]}" '
                      f'stroke-linecap="round" fill="none">{flash}'
-                     f'<g>{visibility}<use href="#duel-lower" transform="{place}"/>'
-                     f'<g>{aim}<use href="#duel-upper" transform="{place}"/></g></g>'
+                     f'<g>{visibility}<g transform="{place}"><use href="#duel-body"/>'
+                     f'<g>{aim}<use href="#duel-rifle"/></g></g></g>'
                      '</g></g>' + text(x - facing * 70, 78, f'P{player + 1}', c['muted'], 11, 'middle', 700) + '</g></g>')
     # Magazine particles are drawn before the fences, so they fall behind the mesh.
     for when, shooter, _ in SHOTS:
         x, facing = PLAYERS[shooter]
         start = when + .10
         # The magazine falls from the rifle, just inboard of the tracked muzzle.
-        mx, my = positioned(shooter, tip - 12, tip_y + 4, start)
+        mx, my = positioned(shooter, tip - 12, tip_y + 4, start, rifle=True)
         mx, my = round(mx, 1), round(my, 1)
         drop = [(0, '0 0'), (start, '0 0'), (start + .12, f'{-facing * 4} 12'),
                 (start + .30, f'{-facing * 8} {GROUND - my:.1f}'),
@@ -264,7 +270,7 @@ def scene(c) -> list[str]:
         parts.append('</g>')
     for when, shooter, kill in SHOTS:
         x, facing = PLAYERS[shooter]
-        mx, my = (round(value, 1) for value in positioned(shooter, tip, tip_y, when))
+        mx, my = (round(value, 1) for value in positioned(shooter, tip, tip_y, when, rifle=True))
         victim = 1 - shooter
         arrival = round(when + FLIGHT, 2)
         if kill:
@@ -325,14 +331,23 @@ if __name__ == '__main__':
         assert when + FLIGHT + (1.10 if kill else 0) < next_shot, 'Arrival or respawn overlaps next shot'
     for player in range(2):
         assert pose(player, 0) == pose(player, LOOP), 'Idle motion must loop'
-        assert abs(upper(player, 0) - upper(player, LOOP)) < 1e-9, 'Shoulder sway must loop'
-    assert upper(0, 0) != upper(1, 0), 'Soldiers must aim independently'
+        assert upper(player, 0) == upper(player, LOOP) == 0, 'Idle rifles must stay in low ready'
+        angles = [upper(player, i / 1000) for i in range(round(LOOP * 1000) + 1)]
+        assert max(abs(a - b) for a, b in zip(angles, angles[1:])) < .6, 'Rifle motion must not jump'
+        for i in range(round(LOOP / DT) + 1):
+            t = round(i * DT, 2)
+            assert positioned(player, *soldier()['pivot'], t, rifle=True) == positioned(
+                player, *soldier()['pivot'], t), 'The rifle butt must stay at the shoulder'
     for when, shooter, kill in SHOTS:
-        assert pose(shooter, when + .03)[0] == -PLAYERS[shooter][1] * 4
+        assert upper(shooter, when - .35) == 0
+        assert abs(upper(shooter, when - .15) + 35.4) < 1e-9, 'Raise must overshoot by two degrees'
+        assert abs(upper(shooter, when) + 33.4) < 1e-9, 'Rifle must aim horizontally at the trigger'
+        assert upper(shooter, when + .70) == 0, 'Rifle must return to low ready'
+        assert pose(shooter, when + .03)[0] == -PLAYERS[shooter][1] * 5
         assert abs(pose(shooter, when + .03)[2]) == 2
-        peak = when + .10
-        sway = 1.5 * math.sin(2 * math.pi * (peak / LOOP * (2 + shooter) + shooter * .25))
-        assert abs(upper(shooter, peak) - sway - PLAYERS[shooter][1] * 6) < 1e-9
+        peak = when + .03
+        sway = math.sin(2 * math.pi * (peak - (when - .10)) / .20)
+        assert abs(upper(shooter, peak) + 33.4 - sway + 6) < 1e-9, 'Rifle recoil must kick upward'
         if kill:
             death = round(when + FLIGHT, 2)
             victim = 1 - shooter
@@ -346,17 +361,21 @@ if __name__ == '__main__':
             assert 0 < alive(1 - shooter, death + .95) < 1
             assert alive(1 - shooter, death + 1.11) == 1
         else:
+            assert upper(1 - shooter, when - .20) == 0, 'Lower the rifle before ducking'
             for i in range(7):
                 t = when + FLIGHT - .03 + i * .01
-                assert all(positioned(1 - shooter, px, py, t)[1] - r * geometry()[1] > GROUND
-                           for px, py, r, _ in drawing()), 'Duck must fully hide every particle'
+                assert all(positioned(1 - shooter, px, py, t, rifle)[1] - r * geometry()[1] > GROUND
+                           for rifle in (False, True) for px, py, r, _ in drawing(rifle)), 'Duck must fully hide every particle'
     sx, sy, anchor, bottom, tip, _ = geometry()
     assert sx == sy, 'Soldiers must retain their original proportions'
     assert 210 <= sy * (max(d[1] for d in drawing()) - min(d[1] for d in drawing())) <= 220
     assert tip > anchor, 'The source muzzle must face right'
+    px, py = soldier()['pivot']
+    mx, my = soldier()['muzzle']
+    assert abs(math.degrees(math.atan2(my - py, mx - px)) - 33.4) < .1
     assert PLAYERS[0][0] + sx * (tip - anchor) < PLAYERS[1][0] - sx * (tip - anchor), 'Rifles overlap'
     for x, facing in PLAYERS:
-        for px, py, _, _ in drawing():
+        for px, py, _, _ in drawing() + drawing(True):
             assert 40 <= x + facing * sx * (px - anchor) <= 1140
             assert 56 <= GROUND + sy * (py - bottom) <= GROUND
     for theme_name, theme in THEMES.items():
@@ -365,7 +384,7 @@ if __name__ == '__main__':
         # Match cards.py's complete FPS card, including its title and SVG wrapper.
         slug, title, tags, _, about = CARDS[1]
         card_size = len(card(theme_name, slug, title, tags, scene, about).encode('utf-8'))
-        assert card_size < 75_000, f'Card exceeds 75 KB: {card_size} bytes'
+        assert card_size < 80_000, f'Card exceeds 80 KB: {card_size} bytes'
         bounds = root.find('.//clipPath[@id="duel-bounds"]/rect')
         assert bounds.attrib == dict(x='40', y='56', width='1100', height='236')
         floor = root.find('.//clipPath[@id="duel-floor"]/rect')
@@ -377,14 +396,23 @@ if __name__ == '__main__':
                    for label in hud)
         assert [label.get('opacity') for label in hud] == ['1', '0', '0']
         assert len(root.findall('.//use')) == 4
-        assert len(root.findall('.//g[@id="duel-upper"]')) == 1
-        assert len(root.findall('.//g[@id="duel-lower"]')) == 1
+        assert len(root.findall('.//g[@id="duel-body"]')) == 1
+        assert len(root.findall('.//g[@id="duel-rifle"]')) == 1
         assert len(root.findall('.//path[@class="duel-magazine"]')) == len(SHOTS)
-        for use in root.findall('.//use'):
-            assert use.get('transform').startswith('translate('), 'Static soldiers must stand and aim'
+        placements = [node for node in root.iter('g') if node.find('use[@href="#duel-body"]') is not None]
         for player, (_, facing) in enumerate(PLAYERS):
-            assert all(f'scale({facing * sx:.4f} {sy:.4f})' in use.get('transform')
-                       for use in root.findall('.//use')[player * 2:player * 2 + 2]), 'Soldiers must face each other'
+            placement = placements[player]
+            assert f'scale({facing * sx:.4f} {sy:.4f})' in placement.get('transform'), 'Soldiers must face each other'
+            rifle = placement.find('g')
+            assert rifle.get('transform') is None, 'Static rifles must retain the photo pose'
+            assert rifle.find('use').get('href') == '#duel-rifle'
+            aim = rifle.find('animateTransform')
+            assert all(tuple(map(float, value.split()[1:])) == tuple(soldier()['pivot'])
+                       for value in aim.get('values').split(';')), 'Rotate in source units about the shoulder'
+            for when, shooter, _ in SHOTS:
+                if shooter == player:
+                    index = aim.get('keyTimes').split(';').index(f'{when / LOOP:.4f}')
+                    assert float(aim.get('values').split(';')[index].split()[0]) == -33.4
         for magazine in root.findall('.//path[@class="duel-magazine"]'):
             assert magazine.get('opacity') == '0'
             assert list(root.find('./g/g')).index(magazine) < next(
@@ -417,7 +445,7 @@ if __name__ == '__main__':
             assert abs(keys[2] * LOOP - when - FLIGHT) < .001
             positions = motion.get('values').split(';')
             assert positions[0] == positions[1] and positions[2] == positions[3]
-            muzzle = tuple(round(v, 1) for v in positioned(shooter, *soldier()['muzzle'], when))
+            muzzle = tuple(round(v, 1) for v in positioned(shooter, *soldier()['muzzle'], when, rifle=True))
             assert tuple(map(float, positions[1].split())) == muzzle, 'Bullet must start at the moving muzzle'
             if kill:
                 chest = tuple(round(v, 1) for v in positioned(
